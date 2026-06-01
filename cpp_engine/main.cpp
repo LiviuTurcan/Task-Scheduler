@@ -3,7 +3,7 @@
 #include <string>
 
 #include "json_io.h"
-#include "scheduler.h"
+#include "algorithms/scheduler.h"
 
 namespace {
 void PrintUsage(const char* executable) {
@@ -27,10 +27,9 @@ int main(int argc, char* argv[]) {
         GenerateSchedule(tasks, availability, fixed_events);
 
     WriteScheduleResult(argv[4], result);
-    std::cout << "warning: Phase 3 engine skeleton loaded " << tasks.size()
-              << " tasks, " << availability.size() << " availability intervals, and "
-              << fixed_events.size()
-              << " fixed event(s). Scheduling algorithms are implemented in Phase 4.\n";
+    std::cout << "success: scheduled " << result.statistics.scheduled_tasks
+              << " of " << result.statistics.total_tasks << " tasks with "
+              << result.statistics.conflicts << " conflict(s).\n";
     return 0;
   } catch (const std::exception& ex) {
     std::cerr << "error: " << ex.what() << '\n';

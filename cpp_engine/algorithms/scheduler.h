@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "models.h"
+#include "../models.h"
 
 std::vector<TimeSlot> GenerateTimeSlots(const std::vector<TimeSlot>& availability,
                                         int slot_minutes = 30);

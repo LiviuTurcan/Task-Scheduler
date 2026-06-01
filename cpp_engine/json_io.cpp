@@ -1,11 +1,9 @@
 #include "json_io.h"
 
-#include <ctime>
 #include <fstream>
-#include <iomanip>
-#include <sstream>
 #include <stdexcept>
 
+#include "algorithms/time_utils.h"
 #include "nlohmann/json.hpp"
 
 namespace {
@@ -27,31 +25,6 @@ json LoadJsonFile(const std::string& path) {
   return data;
 }
 
-int DurationMinutes(const std::string& start, const std::string& end) {
-  std::tm start_tm{};
-  std::tm end_tm{};
-  std::istringstream start_stream(start);
-  std::istringstream end_stream(end);
-  start_stream >> std::get_time(&start_tm, "%Y-%m-%dT%H:%M:%S");
-  end_stream >> std::get_time(&end_tm, "%Y-%m-%dT%H:%M:%S");
-  if (start_stream.fail() || end_stream.fail()) {
-    throw std::runtime_error("Invalid datetime format; expected YYYY-MM-DDTHH:MM:SS");
-  }
-
-  std::time_t start_time = std::mktime(&start_tm);
-  std::time_t end_time = std::mktime(&end_tm);
-  if (start_time == static_cast<std::time_t>(-1) ||
-      end_time == static_cast<std::time_t>(-1)) {
-    throw std::runtime_error("Unable to convert datetime to time_t");
-  }
-
-  const double seconds = std::difftime(end_time, start_time);
-  if (seconds < 0) {
-    throw std::runtime_error("End time is before start time");
-  }
-
-  return static_cast<int>(seconds / 60.0);
-}
 }  // namespace
 
 std::vector<Task> ReadTasks(const std::string& path) {
@@ -132,7 +105,8 @@ std::vector<Task> ReadFixedEvents(const std::string& path) {
     event_task.name = item.at("name").get<std::string>();
     event_task.fixed_start = item.at("start").get<std::string>();
     event_task.fixed_end = item.at("end").get<std::string>();
-    event_task.duration_minutes = DurationMinutes(event_task.fixed_start, event_task.fixed_end);
+    event_task.duration_minutes =
+        DifferenceInMinutes(event_task.fixed_start, event_task.fixed_end);
     event_task.deadline = event_task.fixed_end;
     event_task.priority = 0;
     event_task.difficulty = 0;
