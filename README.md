@@ -27,10 +27,7 @@ g++ -std=c++17 -Wall -Wextra -pedantic `
 
 ## Python Backend
 
-The `python_backend` package validates JSON input, runs the C++ scheduler,
-loads the generated schedule, and exports TXT, CSV, or JSON reports.
-
-Run the backend smoke test before connecting a UI:
+run the backend  test before connecting a UI:
 
 ```powershell
 python -m python_backend.smoke_test
