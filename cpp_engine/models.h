@@ -20,6 +20,8 @@ struct Task {
 struct TimeSlot {
   std::string start;
   std::string end;
+  bool occupied = false;
+  int task_id = 0;
 };
 
 struct ScheduledTask {
@@ -27,6 +29,7 @@ struct ScheduledTask {
   std::string task_name;
   std::string start;
   std::string end;
+  int priority = 0;
 };
 
 struct ScheduleResult {

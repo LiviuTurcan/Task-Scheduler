@@ -6,7 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <task_scheduler\cpp_engine\nlohmann\json.hpp>
+#include "nlohmann/json.hpp"
 
 namespace {
 using nlohmann::json;
@@ -156,6 +156,7 @@ void WriteScheduleResult(const std::string& path, const ScheduleResult& result) 
         {"task_name", item.task_name},
         {"start", item.start},
         {"end", item.end},
+        {"priority", item.priority},
     });
   }
   data["schedule"] = std::move(schedule);
