@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Task Scheduler — Prototype</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>body{font-family:system-ui,Segoe UI,Helvetica,Arial;margin:16px}</style>
+</head>
+<body>
+  <h1>Task Scheduler Prototype</h1>
+
+  <p>Paste JSON inputs (if empty itll use the json files in the data/ folder).</p>
+
+  <label>Tasks JSON (task objects array, fields are id, name, duration, deadline, priority, difficulty, dependencies, can split... check in the data folder)</label><br />
+  <textarea id="tasks" rows="8" cols="90"></textarea><br />
+
+  <label>Availability JSON (available time windows)</label><br />
+  <textarea id="availability" rows="6" cols="90"></textarea><br />
+
+  <label>Fixed events JSON (things already on the calendar)</label><br />
+  <textarea id="fixed" rows="6" cols="90"></textarea><br />
+
+  <button id="run">Run Scheduler</button>
+
+  <h2>Output</h2>
+  <pre id="output" style="max-height:400px;overflow:auto;background:#f6f6f6;padding:8px"></pre>
+
+  <script>
+    document.getElementById('run').addEventListener('click', async () => {
+      const out = document.getElementById('output')
+      out.textContent = 'Preparing request...'
+
+      let payload = {}
+      try {
+        const t = document.getElementById('tasks').value.trim()
+        const a = document.getElementById('availability').value.trim()
+        const f = document.getElementById('fixed').value.trim()
+        if (t) payload.tasks = JSON.parse(t)
+        if (a) payload.availability = JSON.parse(a)
+        if (f) payload.fixed_events = JSON.parse(f)
+      } catch (err) {
+        out.textContent = 'Invalid JSON: ' + err
+        return
+      }
+
+      out.textContent = 'Running scheduler (this may take a few seconds)...'
+      try {
+        const res = await fetch('/run', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        })
+        const data = await res.json()
+        out.textContent = JSON.stringify(data, null, 2)
+      } catch (err) {
+        out.textContent = 'Request failed: ' + err
+      }
+    })
+  </script>
+</body>
+</html>
