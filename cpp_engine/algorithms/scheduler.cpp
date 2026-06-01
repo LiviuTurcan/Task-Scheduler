@@ -347,6 +347,119 @@ std::vector<int> SchedulePreferenceIds(const ScheduleResult& result,
   return task_ids;
 }
 
+int CountFreeMinutes(const std::vector<TimeSlot>& slots) {
+  int free_minutes = 0;
+  for (const auto& slot : slots) {
+    if (!slot.occupied) {
+      free_minutes += DifferenceInMinutes(slot.start, slot.end);
+    }
+  }
+  return free_minutes;
+}
+
+bool DependenciesCompleted(
+    const Task& task,
+    const std::unordered_map<int, std::time_t>& completion_times) {
+  for (const int dependency_id : task.dependencies) {
+    if (completion_times.find(dependency_id) == completion_times.end()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+ScheduleResult RunDailyDynamicProgrammingScheduler(
+    const std::vector<Task>& tasks, const std::vector<TimeSlot>& slots,
+    std::time_t reference_time) {
+  ScheduleResult result;
+  result.generated_by = "cpp_engine";
+  result.statistics.total_tasks = static_cast<int>(tasks.size());
+
+  std::map<std::string, std::vector<TimeSlot>> slots_by_day;
+  for (const auto& slot : slots) {
+    slots_by_day[slot.start.substr(0, 10)].push_back(slot);
+  }
+
+  std::unordered_set<int> scheduled_task_ids;
+  std::unordered_map<int, std::time_t> completion_times;
+  for (auto& [day, day_slots] : slots_by_day) {
+    const std::time_t day_start = ParseDateTime(day + "T00:00:00");
+    std::unordered_set<int> rejected_today;
+
+    while (true) {
+      const int free_minutes = CountFreeMinutes(day_slots);
+      if (free_minutes == 0) {
+        break;
+      }
+
+      std::vector<Task> candidates;
+      for (const auto& task : tasks) {
+        if (scheduled_task_ids.find(task.id) != scheduled_task_ids.end() ||
+            rejected_today.find(task.id) != rejected_today.end() ||
+            ParseDateTime(task.deadline) <= day_start ||
+            !DependenciesCompleted(task, completion_times)) {
+          continue;
+        }
+        candidates.push_back(task);
+      }
+
+      std::vector<Task> selected =
+          SelectTasksWithDynamicProgramming(candidates, free_minutes);
+      if (selected.empty()) {
+        break;
+      }
+      std::sort(selected.begin(), selected.end(),
+                [reference_time](const Task& left, const Task& right) {
+                  const std::time_t left_deadline =
+                      ParseDateTime(left.deadline);
+                  const std::time_t right_deadline =
+                      ParseDateTime(right.deadline);
+                  if (left_deadline != right_deadline) {
+                    return left_deadline < right_deadline;
+                  }
+                  return CalculateUrgencyScore(left, reference_time) >
+                         CalculateUrgencyScore(right, reference_time);
+                });
+
+      for (const auto& task : selected) {
+        bool dependencies_ready = false;
+        const std::time_t earliest_start =
+            LatestDependencyEnd(task, completion_times, day_slots,
+                                &dependencies_ready);
+        if (!dependencies_ready) {
+          rejected_today.insert(task.id);
+          continue;
+        }
+
+        const std::vector<Placement> placements =
+            FindTaskPlacements(task, day_slots, earliest_start, 1);
+        if (placements.empty()) {
+          rejected_today.insert(task.id);
+          continue;
+        }
+
+        ApplyPlacement(placements.front(), &day_slots, &result);
+        scheduled_task_ids.insert(task.id);
+        completion_times[task.id] =
+            ParseDateTime(placements.front().segments.back().end);
+      }
+    }
+  }
+
+  for (const auto& task : tasks) {
+    if (scheduled_task_ids.find(task.id) != scheduled_task_ids.end()) {
+      continue;
+    }
+    const std::string reason =
+        DependenciesCompleted(task, completion_times)
+            ? "Insufficient available time before deadline"
+            : "A dependency could not be scheduled";
+    result.unscheduled_tasks.push_back({task.id, task.name, reason});
+  }
+  RefreshStatistics(&result);
+  return result;
+}
+
 std::vector<Task> SelectBacktrackingCandidates(
     const ScheduleResult& initial_result, const std::vector<Task>& tasks,
     std::time_t reference_time) {
@@ -613,7 +726,9 @@ ScheduleResult ImproveScheduleWithLocalSearch(
 
         const std::vector<Task> prioritized =
             PrioritizeTasks(tasks, reference_time, candidate_preferences);
-        ScheduleResult candidate = RunGreedyScheduler(prioritized, slots);
+        ScheduleResult candidate =
+            RunDailyDynamicProgrammingScheduler(prioritized, slots,
+                                                reference_time);
         if (IsBetterSchedule(candidate, best_result)) {
           best_result = std::move(candidate);
           preference_ids = std::move(candidate_preferences);
@@ -639,55 +754,10 @@ ScheduleResult GenerateSchedule(const std::vector<Task>& tasks,
 
   const std::time_t reference_time =
       slots.empty() ? std::time(nullptr) : ParseDateTime(slots.front().start);
-  std::map<std::string, int> free_minutes_by_day;
-  for (const auto& slot : slots) {
-    if (!slot.occupied) {
-      free_minutes_by_day[slot.start.substr(0, 10)] +=
-          DifferenceInMinutes(slot.start, slot.end);
-    }
-  }
-
-  std::vector<int> selected_ids;
-  std::vector<Task> remaining_tasks = tasks;
-  for (const auto& [day, free_minutes] : free_minutes_by_day) {
-    const std::time_t day_start = ParseDateTime(day + "T00:00:00");
-    std::vector<Task> candidates;
-    for (const auto& task : remaining_tasks) {
-      if (ParseDateTime(task.deadline) >= day_start) {
-        candidates.push_back(task);
-      }
-    }
-
-    std::vector<Task> selected =
-        SelectTasksWithDynamicProgramming(candidates, free_minutes);
-    std::sort(selected.begin(), selected.end(),
-              [reference_time](const Task& left, const Task& right) {
-                const std::time_t left_deadline = ParseDateTime(left.deadline);
-                const std::time_t right_deadline = ParseDateTime(right.deadline);
-                if (left_deadline != right_deadline) {
-                  return left_deadline < right_deadline;
-                }
-                return CalculateUrgencyScore(left, reference_time) >
-                       CalculateUrgencyScore(right, reference_time);
-              });
-
-    std::unordered_set<int> selected_on_day;
-    for (const auto& task : selected) {
-      selected_ids.push_back(task.id);
-      selected_on_day.insert(task.id);
-    }
-    remaining_tasks.erase(
-        std::remove_if(remaining_tasks.begin(), remaining_tasks.end(),
-                       [&selected_on_day](const Task& task) {
-                         return selected_on_day.find(task.id) !=
-                                selected_on_day.end();
-                       }),
-        remaining_tasks.end());
-  }
-
   const std::vector<Task> prioritized =
-      PrioritizeTasks(tasks, reference_time, selected_ids);
-  const ScheduleResult greedy_result = RunGreedyScheduler(prioritized, slots);
+      PrioritizeTasks(tasks, reference_time);
+  const ScheduleResult greedy_result =
+      RunDailyDynamicProgrammingScheduler(prioritized, slots, reference_time);
   const ScheduleResult repaired_result =
       RepairScheduleWithBacktracking(greedy_result, prioritized, slots);
   return ImproveScheduleWithLocalSearch(repaired_result, prioritized, slots);
