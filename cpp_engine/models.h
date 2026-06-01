@@ -30,6 +30,7 @@ struct ScheduledTask {
   std::string start;
   std::string end;
   int priority = 0;
+  std::string deadline;
 };
 
 struct ScheduleResult {

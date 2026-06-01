@@ -16,6 +16,9 @@ ScheduleResult RunGreedyScheduler(const std::vector<Task>& tasks,
 ScheduleResult RepairScheduleWithBacktracking(const ScheduleResult& initial_result,
                                               const std::vector<Task>& tasks,
                                               const std::vector<TimeSlot>& slots);
+ScheduleResult ImproveScheduleWithLocalSearch(const ScheduleResult& initial_result,
+                                              const std::vector<Task>& tasks,
+                                              const std::vector<TimeSlot>& slots);
 ScheduleResult GenerateSchedule(const std::vector<Task>& tasks,
                                 const std::vector<TimeSlot>& availability,
                                 const std::vector<Task>& fixed_events);

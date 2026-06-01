@@ -131,6 +131,7 @@ void WriteScheduleResult(const std::string& path, const ScheduleResult& result) 
         {"start", item.start},
         {"end", item.end},
         {"priority", item.priority},
+        {"deadline", item.deadline},
     });
   }
   data["schedule"] = std::move(schedule);

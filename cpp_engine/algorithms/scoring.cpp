@@ -24,6 +24,17 @@ int CountScheduleConflicts(const ScheduleResult& result) {
   return conflicts;
 }
 
+int CountDeadlineViolations(const ScheduleResult& result) {
+  std::unordered_set<int> violating_task_ids;
+  for (const auto& task : result.schedule) {
+    if (!task.deadline.empty() &&
+        ParseDateTime(task.end) > ParseDateTime(task.deadline)) {
+      violating_task_ids.insert(task.task_id);
+    }
+  }
+  return static_cast<int>(violating_task_ids.size());
+}
+
 int CalculateValidationPenalty(const ScheduleResult& result) {
   return result.statistics.conflicts * 1000 +
          result.statistics.deadline_violations * 1000;

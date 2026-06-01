@@ -21,9 +21,15 @@ std::time_t ParseDateTime(const std::string& value) {
   }
 
   parsed.tm_isdst = -1;
+  const std::tm expected = parsed;
   const std::time_t timestamp = std::mktime(&parsed);
   if (timestamp == static_cast<std::time_t>(-1)) {
     throw std::runtime_error("Unable to convert datetime: " + value);
+  }
+  if (parsed.tm_year != expected.tm_year || parsed.tm_mon != expected.tm_mon ||
+      parsed.tm_mday != expected.tm_mday || parsed.tm_hour != expected.tm_hour ||
+      parsed.tm_min != expected.tm_min || parsed.tm_sec != expected.tm_sec) {
+    throw std::runtime_error("Invalid datetime value: " + value);
   }
   return timestamp;
 }
