@@ -21,6 +21,11 @@
   <link rel="stylesheet" href="/static/css/calendar.css?v=20260603_v2" />
 </head>
 <body class="theme-forest">
+  <script>
+    if (localStorage.getItem('chrono_demo_tour_autolaunch') !== 'false') {
+      document.body.classList.add('tour-cinematic-mode');
+    }
+  </script>
   <!-- ATMOSPHERIC NEON LAYER -->
   <div class="bg-canvas"></div>
   <div class="glow-blob glow-1"></div>

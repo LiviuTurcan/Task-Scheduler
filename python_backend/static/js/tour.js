@@ -44,7 +44,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Auto-launch on startup unless disabled in settings
   const autolaunch = localStorage.getItem('chrono_demo_tour_autolaunch') !== 'false';
   if (autolaunch) {
-    setTimeout(startChronoTour, 1500); // smooth delayed entry
+    startChronoTour();
   }
 });
 
