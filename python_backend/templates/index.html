@@ -16,9 +16,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   
   <!-- Modular Style Declarations -->
-  <link rel="stylesheet" href="/static/css/global.css?v=20260603_v4" />
-  <link rel="stylesheet" href="/static/css/dashboard.css?v=20260603_v4" />
-  <link rel="stylesheet" href="/static/css/calendar.css?v=20260603_v4" />
+  <link rel="stylesheet" href="/static/css/global.css?v=20260603_v5" />
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=20260603_v5" />
+  <link rel="stylesheet" href="/static/css/calendar.css?v=20260603_v5" />
 </head>
 <body class="theme-forest">
   <script>
@@ -166,7 +166,7 @@
           <div class="book-container-box">
             <div class="dock-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
               <h3>Developer Console</h3>
-              <button onclick="this.closest('#pane-json').classList.toggle('fullscreen-book')" class="btn-action-outline" style="padding: 6px; border-radius: 8px; border-color: rgba(255,255,255,0.1); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="Toggle Fullscreen (Book Mode)">
+              <button onclick="toggleDeveloperConsoleFullscreen()" class="btn-action-outline" style="padding: 6px; border-radius: 8px; border-color: rgba(255,255,255,0.1); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="Toggle Fullscreen (Book Mode)">
                 <i data-lucide="book-open" style="width: 16px; height: 16px; color: var(--neon-cyan);"></i>
               </button>
             </div>
@@ -805,13 +805,13 @@
   <!-- ==========================================================================
        MODULAR ES MODULE LINKS
        ========================================================================== -->
-  <script src="/static/js/state.js?v=20260603_v4"></script>
-  <script src="/static/js/canvas.js?v=20260603_v4"></script>
-  <script src="/static/js/charts.js?v=20260603_v4"></script>
-  <script src="/static/js/modals.js?v=20260603_v4"></script>
-  <script src="/static/js/calendar_views.js?v=20260603_v4"></script>
-  <script src="/static/js/exports.js?v=20260603_v4"></script>
-  <script src="/static/js/tour.js?v=20260603_v4"></script>
+  <script src="/static/js/state.js?v=20260603_v5"></script>
+  <script src="/static/js/canvas.js?v=20260603_v5"></script>
+  <script src="/static/js/charts.js?v=20260603_v5"></script>
+  <script src="/static/js/modals.js?v=20260603_v5"></script>
+  <script src="/static/js/calendar_views.js?v=20260603_v5"></script>
+  <script src="/static/js/exports.js?v=20260603_v5"></script>
+  <script src="/static/js/tour.js?v=20260603_v5"></script>
   
   <!-- DYNAMIC CHRONO GUIDE TOUR WIDGET -->
   <div class="tour-overlay" id="tour-overlay-element"></div>

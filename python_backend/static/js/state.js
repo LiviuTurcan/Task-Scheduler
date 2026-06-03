@@ -654,6 +654,12 @@ function escapeHtml(text) {
 
 // Visual Tab Panel Switcher Callback
 function switchDockTab(paneId) {
+  // Close fullscreen book mode if switching away from developer tab
+  const devPane = document.getElementById('pane-json');
+  if (paneId !== 'pane-json' && devPane && devPane.classList.contains('fullscreen-book')) {
+    toggleDeveloperConsoleFullscreen();
+  }
+
   document.querySelectorAll('.dock-tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.dock-pane').forEach(pane => pane.classList.remove('active'));
   
@@ -664,6 +670,19 @@ function switchDockTab(paneId) {
   
   const pane = document.getElementById(paneId);
   if (pane) pane.classList.add('active');
+}
+
+function toggleDeveloperConsoleFullscreen() {
+  const pane = document.getElementById('pane-json');
+  const wrapper = document.querySelector('.dock-panes-wrapper');
+  
+  if (pane.classList.contains('fullscreen-book')) {
+    pane.classList.remove('fullscreen-book');
+    wrapper.appendChild(pane);
+  } else {
+    pane.classList.add('fullscreen-book');
+    document.body.appendChild(pane);
+  }
 }
 
 // Scan scheduled tasks, archive ended ones, and return true if any changes occurred
