@@ -41,9 +41,9 @@ const tourSteps = [
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-chrono-guide').addEventListener('click', startChronoTour);
   
-  // Auto-launch on very first visit
-  const completed = localStorage.getItem('chrono_tour_completed_phase7');
-  if (!completed) {
+  // Auto-launch on startup unless disabled in settings
+  const autolaunch = localStorage.getItem('chrono_demo_tour_autolaunch') !== 'false';
+  if (autolaunch) {
     setTimeout(startChronoTour, 1500); // smooth delayed entry
   }
 });

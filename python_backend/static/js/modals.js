@@ -309,6 +309,11 @@ function launchSettingsModal() {
     toggle.checked = isAutoSolve;
   }
   
+  const tourToggle = document.getElementById('settings-tour-autolaunch-toggle');
+  if (tourToggle) {
+    tourToggle.checked = localStorage.getItem('chrono_demo_tour_autolaunch') !== 'false';
+  }
+  
   // Sync the theme preset swatch active highlights
   const activeThemeClass = Array.from(document.body.classList).find(c => c.startsWith('theme-')) || 'theme-violet';
   document.querySelectorAll('#modal-settings-popup .theme-swatch').forEach(swatch => {
@@ -321,6 +326,13 @@ function launchSettingsModal() {
 
 function syncSettingsAutoSolve(checked) {
   toggleAutoSolveState(checked);
+}
+
+function toggleTourAutolaunch(checked) {
+  localStorage.setItem('chrono_demo_tour_autolaunch', checked ? 'true' : 'false');
+  if (typeof showSpringToast === 'function') {
+    showSpringToast(checked ? 'Guide Auto-Launch Enabled' : 'Guide Auto-Launch Disabled');
+  }
 }
 
 function triggerGlobalImportFromSettings() {

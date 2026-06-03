@@ -647,6 +647,25 @@
           </p>
         </div>
 
+        <!-- Tour Auto-Launch Toggle -->
+        <div class="hud-field-group">
+          <label style="margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--text-secondary);">
+            Demo Configuration
+          </label>
+          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; height: 42px;">
+            <span style="font-size: 13px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="graduation-cap" style="width: 16px; height: 16px; color: var(--neon-cyan);"></i> Launch Guide on Startup
+            </span>
+            <label class="hud-toggle size-sm">
+              <input type="checkbox" id="settings-tour-autolaunch-toggle" checked onchange="toggleTourAutolaunch(this.checked)">
+              <span class="hud-toggle-slider"></span>
+            </label>
+          </div>
+          <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4;">
+            When enabled, the 3D cinematic guide tour auto-starts on every visit. Disabling this saves your preference.
+          </p>
+        </div>
+
         <!-- Global Package Import/Export -->
         <div class="hud-field-group">
           <label style="margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--text-secondary);">
