@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="/static/css/dashboard.css?v=20260603_v2" />
   <link rel="stylesheet" href="/static/css/calendar.css?v=20260603_v2" />
 </head>
-<body class="theme-violet">
+<body class="theme-forest">
   <!-- ATMOSPHERIC NEON LAYER -->
   <div class="bg-canvas"></div>
   <div class="glow-blob glow-1"></div>
@@ -614,7 +614,7 @@
             Theme Preset
           </label>
           <div class="theme-swatch-row" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-            <button onclick="setGlobalThemePreset('theme-violet')" class="theme-swatch swatch-violet active" style="width: 22px; height: 22px; border-radius: 50%;" title="Cyber Violet"></button>
+            <button onclick="setGlobalThemePreset('theme-violet')" class="theme-swatch swatch-violet" style="width: 22px; height: 22px; border-radius: 50%;" title="Cyber Violet"></button>
             <button onclick="setGlobalThemePreset('theme-oled')" class="theme-swatch swatch-oled" style="width: 22px; height: 22px; border-radius: 50%;" title="OLED Void"></button>
             <button onclick="setGlobalThemePreset('theme-amber')" class="theme-swatch swatch-amber" style="width: 22px; height: 22px; border-radius: 50%;" title="Cyber Orange"></button>
             <button onclick="setGlobalThemePreset('theme-emerald')" class="theme-swatch swatch-emerald" style="width: 22px; height: 22px; border-radius: 50%;" title="Matrix Emerald"></button>
@@ -623,7 +623,7 @@
             <button onclick="setGlobalThemePreset('theme-ocean')" class="theme-swatch swatch-ocean" style="width: 22px; height: 22px; border-radius: 50%;" title="Deep Ocean"></button>
             <button onclick="setGlobalThemePreset('theme-sunset')" class="theme-swatch swatch-sunset" style="width: 22px; height: 22px; border-radius: 50%;" title="Sunset Glow"></button>
             <button onclick="setGlobalThemePreset('theme-nord')" class="theme-swatch swatch-nord" style="width: 22px; height: 22px; border-radius: 50%;" title="Nordic Frost"></button>
-            <button onclick="setGlobalThemePreset('theme-forest')" class="theme-swatch swatch-forest" style="width: 22px; height: 22px; border-radius: 50%;" title="Forest Moss"></button>
+            <button onclick="setGlobalThemePreset('theme-forest')" class="theme-swatch swatch-forest active" style="width: 22px; height: 22px; border-radius: 50%;" title="Forest Moss"></button>
             <button onclick="setGlobalThemePreset('theme-slate')" class="theme-swatch swatch-slate" style="width: 22px; height: 22px; border-radius: 50%;" title="Monochrome Slate"></button>
           </div>
         </div>
@@ -824,7 +824,7 @@
 
     // Apply stored theme on initial parse to prevent flashes
     (function() {
-      const savedTheme = localStorage.getItem('aether_theme_preset') || 'theme-violet';
+      const savedTheme = localStorage.getItem('aether_theme_preset') || 'theme-forest';
       document.body.className = '';
       document.body.classList.add(savedTheme);
       
