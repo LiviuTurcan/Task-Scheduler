@@ -182,12 +182,18 @@ function init3DBackdrop() {
   planetGroup = new THREE.Group();
   scene.add(planetGroup);
   
-  // Initialize meshes with blank configurations (colored by theme observer)
+  // Initialize meshes with fixed Saturn-like realistic cosmic colors
+  const planetTex = generatePlanetTexture('#2f2519', '#d4a373', '#e07a5f');
   const sphereGeo = new THREE.SphereGeometry(110, 64, 64);
-  const sphereMat = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.05 });
+  const sphereMat = new THREE.MeshStandardMaterial({ 
+    map: planetTex,
+    roughness: 0.9, 
+    metalness: 0.05 
+  });
   planetMesh = new THREE.Mesh(sphereGeo, sphereMat);
   planetGroup.add(planetMesh);
   
+  const ringTex = generateRingTexture('#e9c46a');
   const ringGeo = new THREE.RingGeometry(140, 220, 64);
   // UV mapping coordinate fix for RingGeometry to wrap ring texture circularly
   const pos = ringGeo.attributes.position;
@@ -202,6 +208,7 @@ function init3DBackdrop() {
   }
   
   const ringMat = new THREE.MeshStandardMaterial({ 
+    map: ringTex,
     side: THREE.DoubleSide, 
     transparent: true, 
     opacity: 0.72,
@@ -222,11 +229,11 @@ function init3DBackdrop() {
   moonMesh = new THREE.Mesh(moonGeo, moonMat);
   planetGroup.add(moonMesh);
   
-  // 7. Add Lighting
+  // 7. Add Lighting (Warm, sun-like directional light)
   ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
   scene.add(ambientLight);
   
-  directionalLight = new THREE.DirectionalLight(0xffffff, 1.3);
+  directionalLight = new THREE.DirectionalLight(0xfff8e7, 1.45);
   directionalLight.position.set(300, 200, 300);
   scene.add(directionalLight);
   
@@ -251,58 +258,16 @@ function syncThreeColors() {
   if (theme === lastTheme) return;
   lastTheme = theme;
   
-  const style = getComputedStyle(document.body);
-  const accentHex = style.getPropertyValue('--neon-accent').trim() || '#a855f7';
-  const purpleHex = style.getPropertyValue('--neon-purple').trim() || '#a855f7';
-  const cyanHex = style.getPropertyValue('--neon-cyan').trim() || '#06b6d4';
-  
   const isLight = theme.includes('theme-light');
-  
-  // Define custom procedural colors based on theme presets
-  let c1 = '#090518', c2 = '#1b0d3a', spot = accentHex;
-  if (theme.includes('theme-oled')) {
-    c1 = '#020512'; c2 = '#081745'; spot = cyanHex;
-  } else if (theme.includes('theme-amber')) {
-    c1 = '#120802'; c2 = '#3a1805'; spot = purpleHex;
-  } else if (theme.includes('theme-emerald')) {
-    c1 = '#021206'; c2 = '#083a15'; spot = accentHex;
-  } else if (theme.includes('theme-sakura')) {
-    c1 = '#18020d'; c2 = '#450828'; spot = accentHex;
-  } else if (theme.includes('theme-light')) {
-    c1 = '#e2e8f0'; c2 = '#94a3b8'; spot = '#4f46e5';
-  } else if (theme.includes('theme-ocean')) {
-    c1 = '#020e18'; c2 = '#062d4e'; spot = cyanHex;
-  } else if (theme.includes('theme-sunset')) {
-    c1 = '#200508'; c2 = '#5a121a'; spot = '#f97316';
-  } else if (theme.includes('theme-nord')) {
-    c1 = '#2e3440'; c2 = '#4c566a'; spot = '#88c0d0';
-  } else if (theme.includes('theme-forest')) {
-    c1 = '#05180c'; c2 = '#123a1e'; spot = '#a3e635';
-  } else if (theme.includes('theme-slate')) {
-    c1 = '#1e293b'; c2 = '#475569'; spot = '#cbd5e1';
-  }
-  
-  // Re-generate textures
-  const planetTex = generatePlanetTexture(c1, c2, spot);
-  const ringTex = generateRingTexture(spot);
-  
-  planetMesh.material.map = planetTex;
-  planetMesh.material.needsUpdate = true;
-  
-  ringMesh.material.map = ringTex;
-  ringMesh.material.needsUpdate = true;
-  
-  // Adjust lights
-  directionalLight.color.set(spot);
   
   if (isLight) {
     ambientLight.color.set('#ffffff');
-    ambientLight.intensity = 0.8;
+    ambientLight.intensity = 0.85;
     starParticles.material.color.set('#475569'); // Dark slate particles on light bg
     starParticles.material.opacity = 0.45;
   } else {
     ambientLight.color.set('#ffffff');
-    ambientLight.intensity = 0.4;
+    ambientLight.intensity = 0.45;
     starParticles.material.color.set('#ffffff'); // Twinkling white stars on dark bg
     starParticles.material.opacity = 0.85;
   }
