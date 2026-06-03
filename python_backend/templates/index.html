@@ -360,9 +360,9 @@
             <span>C++ Optimization Engine Runtime Simulator</span>
           </div>
           <div class="terminal-controls">
-            <span class="term-dot close"></span>
-            <span class="term-dot minimize"></span>
-            <span class="term-dot maximize"></span>
+            <span class="term-dot close" title="Close" onclick="this.closest('.compiler-terminal-panel').style.display='none'"></span>
+            <span class="term-dot minimize" title="Minimize/Expand content" onclick="const p=this.closest('.compiler-terminal-panel'); const v=p.querySelector('.terminal-viewport-box'); v.style.display=v.style.display==='none'?'block':'none'"></span>
+            <span class="term-dot maximize" title="Toggle Fullscreen" onclick="this.closest('.compiler-terminal-panel').classList.toggle('fullscreen')"></span>
           </div>
         </div>
         <div class="terminal-viewport-box" id="compiler-log-terminal">

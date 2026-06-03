@@ -1054,6 +1054,31 @@ input:checked + .hud-toggle-slider:before {
   line-height: 1.5;
 }
 
+.term-dot {
+  cursor: pointer;
+}
+
+.compiler-terminal-panel.fullscreen {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  width: calc(100vw - 40px) !important;
+  height: calc(100vh - 40px) !important;
+  z-index: 100000;
+  margin: 0 !important;
+  background: rgba(10, 5, 25, 0.95) !important;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(139, 92, 246, 0.2);
+}
+
+.compiler-terminal-panel.fullscreen .terminal-viewport-box {
+  height: calc(100% - 37px) !important;
+  max-height: none !important;
+  font-size: 13px;
+}
+
 /* ==========================================================================
    10. TOAST ALERTS DECK
    ========================================================================== */
