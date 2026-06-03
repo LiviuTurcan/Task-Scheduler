@@ -229,11 +229,11 @@ h1, h2, h3, h4, h5, h6 {
   width: 700px;
   height: 700px;
   border-radius: 50%;
-  filter: blur(150px);
-  opacity: 0.14;
+  filter: blur(180px);
+  opacity: 0.07;
   pointer-events: none;
   z-index: -3;
-  animation: pulseGlow 15s infinite alternate ease-in-out;
+  animation: pulseGlow 20s infinite alternate ease-in-out;
   transition: background 0.5s ease;
 }
 
