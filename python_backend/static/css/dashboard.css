@@ -1319,3 +1319,117 @@ input:checked + .hud-toggle-slider:before {
     transform: scale(1.03);
   }
 }
+
+/* ==========================================================================
+   DEVELOPER CONSOLE FULLSCREEN BOOK MODE
+   ========================================================================== */
+#pane-json {
+  display: none;
+}
+#pane-json.active {
+  display: flex;
+  flex-direction: column;
+}
+
+#pane-json .accordion-console {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 44px);
+  overflow-y: auto;
+  gap: 16px;
+  padding-right: 4px;
+}
+
+#pane-json .accordion-left-page, 
+#pane-json .accordion-right-page {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+#pane-json .dev-inputs-scroll-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#pane-json.fullscreen-book {
+  position: fixed !important;
+  top: 30px !important;
+  left: 30px !important;
+  right: 30px !important;
+  bottom: 30px !important;
+  width: calc(100vw - 60px) !important;
+  height: calc(100vh - 60px) !important;
+  z-index: 200000 !important;
+  background: rgba(10, 5, 25, 0.98) !important;
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  border-radius: 20px;
+  padding: 30px !important;
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(139, 92, 246, 0.3);
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#pane-json.fullscreen-book .dock-header {
+  margin-bottom: 20px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+
+#pane-json.fullscreen-book .dock-header h3 {
+  font-size: 20px;
+  color: #fff;
+  font-weight: 800;
+  text-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+}
+
+#pane-json.fullscreen-book .accordion-console {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 30px !important;
+  height: calc(100% - 60px) !important;
+  overflow: hidden !important;
+}
+
+#pane-json.fullscreen-book .accordion-left-page, 
+#pane-json.fullscreen-book .accordion-right-page {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+#pane-json.fullscreen-book .dev-inputs-scroll-deck {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding-right: 8px;
+  gap: 16px !important;
+}
+
+#pane-json.fullscreen-book .code-terminal {
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+#pane-json.fullscreen-book #dev-textarea-tasks {
+  height: 250px !important;
+}
+
+#pane-json.fullscreen-book #dev-textarea-availability {
+  height: 150px !important;
+}
+
+#pane-json.fullscreen-book #dev-textarea-fixed {
+  height: 150px !important;
+}
+
+#pane-json.fullscreen-book #dev-textarea-output {
+  flex: 1 !important;
+  min-height: 250px !important;
+}
+
+#pane-json.fullscreen-book #dev-optimization-diff-log {
+  height: 200px !important;
+}

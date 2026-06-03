@@ -163,50 +163,62 @@
 
         <!-- PANE 4: DEV DIRECT JSON CONSOLE -->
         <div id="pane-json" class="dock-pane">
-          <div class="accordion-console" style="display: flex; flex-direction: column; height: 100%;">
-            
-            <!-- Controls at the top -->
-            <div style="display: flex; gap: 8px; flex-shrink: 0;">
-              <button onclick="beautifyAllDeveloperJson()" class="btn-action-outline" style="flex: 1; justify-content:center; padding:10px; border-color:var(--neon-cyan-dim); color: var(--neon-cyan);">
-                <i data-lucide="align-left" style="width:14px;height:14px;"></i> Format JSON
-              </button>
-              <button onclick="commitJsonEditsToGUI()" class="btn-action-primary" style="flex: 1.5; justify-content:center; padding:10px; box-shadow: 0 0 15px rgba(var(--neon-accent-rgb), 0.35);">
-                <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Sync & Run
-              </button>
-            </div>
-            
-            <button onclick="revertUnsyncDeveloperEdits()" class="btn-action-outline" style="width:100%; flex-shrink: 0; justify-content:center; padding:10px; border-color:var(--neon-rose); color:var(--neon-rose); box-shadow: 0 0 10px rgba(244,63,94,0.1);" title="Unsync edits and restore prior database state">
-              <i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> Unsync & Revert
+          <div class="dock-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
+            <h3>Developer Console</h3>
+            <button onclick="this.closest('#pane-json').classList.toggle('fullscreen-book')" class="btn-action-outline" style="padding: 6px; border-radius: 8px; border-color: rgba(255,255,255,0.1); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="Toggle Fullscreen (Book Mode)">
+              <i data-lucide="book-open" style="width: 16px; height: 16px; color: var(--neon-cyan);"></i>
             </button>
-            
-            <!-- Changes log right under controls -->
-            <div style="flex-shrink: 0; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
-              <label class="console-header-tag" style="color: var(--neon-cyan); margin-top: 6px;">Optimization Changes Log</label>
-              <div id="dev-optimization-diff-log" class="code-terminal" style="height: 100px; overflow-y: auto; color: var(--neon-cyan); background: rgba(5, 12, 28, 0.95); border-color: rgba(6, 182, 212, 0.2); font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.5;">
-                <span style="color: var(--text-muted);">No changes logged yet. Run optimizer...</span>
-              </div>
-            </div>
+          </div>
 
-            <!-- Monospace styled Textareas below -->
-            <div class="deck-scrollable-container" style="flex: 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 4px;">
-              <div>
-                <label class="console-header-tag">Tasks Payload JSON</label>
-                <textarea id="dev-textarea-tasks" class="code-terminal" style="height: 120px;"></textarea>
+          <div class="accordion-console">
+            <!-- LEFT PAGE: INPUTS & CONTROLS -->
+            <div class="accordion-left-page">
+              <!-- Controls at the top -->
+              <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                <button onclick="beautifyAllDeveloperJson()" class="btn-action-outline" style="flex: 1; justify-content:center; padding:10px; border-color:var(--neon-cyan-dim); color: var(--neon-cyan);">
+                  <i data-lucide="align-left" style="width:14px;height:14px;"></i> Format JSON
+                </button>
+                <button onclick="commitJsonEditsToGUI()" class="btn-action-primary" style="flex: 1.5; justify-content:center; padding:10px; box-shadow: 0 0 15px rgba(var(--neon-accent-rgb), 0.35);">
+                  <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Sync & Run
+                </button>
               </div>
-              <div>
-                <label class="console-header-tag">Availability Payload JSON</label>
-                <textarea id="dev-textarea-availability" class="code-terminal" style="height: 80px;"></textarea>
-              </div>
-              <div>
-                <label class="console-header-tag">Fixed Commitments Payload JSON</label>
-                <textarea id="dev-textarea-fixed" class="code-terminal" style="height: 80px;"></textarea>
-              </div>
-              <div>
-                <label class="console-header-tag" style="color: var(--neon-emerald);">C++ Solver Output JSON (Optimized Result)</label>
-                <textarea id="dev-textarea-output" class="code-terminal" style="height: 120px; color: #10b981; background: rgba(0, 5, 2, 0.95); border-color: rgba(16, 185, 129, 0.2);" readonly placeholder="Optimize schedule to compile C++ results..."></textarea>
+              
+              <button onclick="revertUnsyncDeveloperEdits()" class="btn-action-outline" style="width:100%; flex-shrink: 0; justify-content:center; padding:10px; border-color:var(--neon-rose); color:var(--neon-rose); box-shadow: 0 0 10px rgba(244,63,94,0.1); margin-top: 8px;" title="Unsync edits and restore prior database state">
+                <i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> Unsync & Revert
+              </button>
+
+              <!-- Monospace styled Textareas below -->
+              <div class="dev-inputs-scroll-deck">
+                <div style="margin-top: 12px;">
+                  <label class="console-header-tag">Tasks Payload JSON</label>
+                  <textarea id="dev-textarea-tasks" class="code-terminal" style="height: 120px;"></textarea>
+                </div>
+                <div style="margin-top: 12px;">
+                  <label class="console-header-tag">Availability Payload JSON</label>
+                  <textarea id="dev-textarea-availability" class="code-terminal" style="height: 80px;"></textarea>
+                </div>
+                <div style="margin-top: 12px;">
+                  <label class="console-header-tag">Fixed Commitments Payload JSON</label>
+                  <textarea id="dev-textarea-fixed" class="code-terminal" style="height: 80px;"></textarea>
+                </div>
               </div>
             </div>
             
+            <!-- RIGHT PAGE: OUTPUTS & LOGS -->
+            <div class="accordion-right-page">
+              <!-- Changes log right under controls -->
+              <div style="flex-shrink: 0; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+                <label class="console-header-tag" style="color: var(--neon-cyan); margin-top: 6px;">Optimization Changes Log</label>
+                <div id="dev-optimization-diff-log" class="code-terminal" style="height: 100px; overflow-y: auto; color: var(--neon-cyan); background: rgba(5, 12, 28, 0.95); border-color: rgba(6, 182, 212, 0.2); font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.5;">
+                  <span style="color: var(--text-muted);">No changes logged yet. Run optimizer...</span>
+                </div>
+              </div>
+
+              <div style="flex: 1; display: flex; flex-direction: column;">
+                <label class="console-header-tag" style="color: var(--neon-emerald);">C++ Solver Output JSON (Optimized Result)</label>
+                <textarea id="dev-textarea-output" class="code-terminal" style="flex: 1; min-height: 120px; color: #10b981; background: rgba(0, 5, 2, 0.95); border-color: rgba(16, 185, 129, 0.2);" readonly placeholder="Optimize schedule to compile C++ results..."></textarea>
+              </div>
+            </div>
           </div>
         </div>
 
