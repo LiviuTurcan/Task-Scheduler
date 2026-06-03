@@ -373,23 +373,38 @@ function renderTimelineView() {
 function makeTimelineBlockDraggable(element, segment, durationMinutes) {
   let startY = 0;
   let startTop = 0;
-  
-  element.addEventListener('mousedown', (e) => {
-    // Left mouse click only
+  let isDragging = false;
+
+  // Prevent native HTML5 drag-and-drop from hijacking custom mouse/pointer movements
+  element.addEventListener('dragstart', (e) => e.preventDefault());
+
+  // Use PointerEvents to support touchscreens and mouse inputs seamlessly
+  element.addEventListener('pointerdown', (e) => {
+    // Left click / primary touch point only
     if (e.button !== 0) return;
+    
+    // Ignore if clicking input fields or buttons
+    if (e.target.closest('button') || e.target.closest('input')) return;
     
     e.preventDefault();
     dismissHoverTooltip(); // hide popover while moving
     
+    isDragging = true;
     element.classList.add('dragging-active');
     startY = e.clientY;
-    startTop = parseInt(element.style.top) || 0;
     
-    document.addEventListener('mousemove', onDragMove);
-    document.addEventListener('mouseup', onDragEnd);
+    const styleTop = element.style.top;
+    startTop = styleTop ? parseInt(styleTop, 10) : element.offsetTop;
+    if (isNaN(startTop)) startTop = 0;
+    
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd);
+    document.addEventListener('pointercancel', onDragEnd);
   });
   
   function onDragMove(e) {
+    if (!isDragging) return;
+    
     let dy = e.clientY - startY;
     let newTop = startTop + dy;
     
@@ -410,16 +425,23 @@ function makeTimelineBlockDraggable(element, segment, durationMinutes) {
     const endMins = endTotal % 60;
     
     const timeString = `${String(startHour).padStart(2, '0')}:${String(startMins).padStart(2, '0')} - ${String(endHour).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
-    element.querySelector('.block-hours-tag').textContent = timeString;
+    const hoursTag = element.querySelector('.block-hours-tag');
+    if (hoursTag) {
+      hoursTag.textContent = timeString;
+    }
   }
   
   async function onDragEnd(e) {
-    document.removeEventListener('mousemove', onDragMove);
-    document.removeEventListener('mouseup', onDragEnd);
+    if (!isDragging) return;
+    isDragging = false;
+    
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+    document.removeEventListener('pointercancel', onDragEnd);
     
     element.classList.remove('dragging-active');
     
-    const finalTop = parseInt(element.style.top) || 0;
+    const finalTop = parseInt(element.style.top, 10) || 0;
     
     // Calculate new start / end date times
     const startHour = Math.floor(finalTop / 60);
@@ -432,8 +454,8 @@ function makeTimelineBlockDraggable(element, segment, durationMinutes) {
     const newStartISO = `${activeDayDateString}T${String(startHour).padStart(2, '0')}:${String(startMins).padStart(2, '0')}:00`;
     const newEndISO = `${activeDayDateString}T${String(endHour).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
     
-    // Find task in local memory, convert it to FIXED at this custom time so бэкенд respects it!
-    const taskIdx = tasks.findIndex(t => t.id === segment.task_id);
+    // Find task in local memory, convert it to FIXED at this custom time so backend respects it!
+    const taskIdx = tasks.findIndex(t => String(t.id) === String(segment.task_id));
     if (taskIdx !== -1) {
       tasks[taskIdx].fixed = true;
       tasks[taskIdx].fixed_start = newStartISO;
