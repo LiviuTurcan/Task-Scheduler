@@ -70,6 +70,10 @@ function abortChronoTour() {
     el.classList.remove('tour-highlight-focus');
   });
 
+  if (typeof setTourCameraStep === 'function') {
+    setTourCameraStep(-1);
+  }
+
   localStorage.setItem('chrono_tour_completed_phase7', 'true');
   showSpringToast('Completed Chrono Guide Tour. Happy scheduling!');
 }
@@ -92,6 +96,10 @@ function navigateTourStep(direction) {
 
 function renderTourStep() {
   const step = tourSteps[tourCurrentStep];
+  
+  if (typeof setTourCameraStep === 'function') {
+    setTourCameraStep(tourCurrentStep);
+  }
   
   // 1. Update text & title
   document.getElementById('tour-step-title').textContent = step.title;

@@ -11,6 +11,13 @@ let mouseX = 0, mouseY = 0;
 let targetMouseX = 0, targetMouseY = 0;
 let lastTheme = '';
 
+// Cinematic 3D Tour variables
+let cinematicMode = false;
+let tourStep = -1;
+let currentLookAt = new THREE.Vector3(0, 0, 0);
+let targetCameraPos = new THREE.Vector3(0, 0, 700);
+let targetLookAt = new THREE.Vector3(0, 0, 0);
+
 // Helper to convert hex to RGBA
 function hexToRgba(hex, alpha) {
   let c = hex.substring(1);
@@ -308,19 +315,98 @@ window.addEventListener('mousemove', (e) => {
   targetMouseY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
 });
 
+// Cinematic 3D Tour camera controller
+function setTourCameraStep(stepIndex) {
+  tourStep = stepIndex;
+  
+  if (stepIndex === -1) {
+    cinematicMode = false;
+    document.body.classList.remove('tour-cinematic-mode', 'sidebar-fadein', 'main-fadein', 'header-fadein');
+    updatePlanetLayout();
+    return;
+  }
+  
+  cinematicMode = true;
+  document.body.classList.add('tour-cinematic-mode');
+  
+  if (stepIndex === 0) {
+    // Step 0: Welcome - everything hidden, focus close on planet
+    document.body.classList.remove('sidebar-fadein', 'main-fadein', 'header-fadein');
+    if (planetGroup) {
+      targetCameraPos.set(planetGroup.position.x - 130, planetGroup.position.y + 30, planetGroup.position.z + 230);
+      targetLookAt.set(planetGroup.position.x, planetGroup.position.y, planetGroup.position.z);
+    }
+  }
+  else if (stepIndex === 1) {
+    // Step 1: Sidebar Control Dock - show sidebar, track moon closely
+    document.body.classList.add('sidebar-fadein');
+    document.body.classList.remove('main-fadein', 'header-fadein');
+  }
+  else if (stepIndex === 2) {
+    // Step 2: SaaS Analytics Dashboard - show sidebar & main grid
+    document.body.classList.add('sidebar-fadein', 'main-fadein');
+    document.body.classList.remove('header-fadein');
+    if (planetGroup) {
+      targetCameraPos.set(planetGroup.position.x + 260, planetGroup.position.y - 80, planetGroup.position.z + 340);
+      targetLookAt.set(planetGroup.position.x, planetGroup.position.y, planetGroup.position.z);
+    }
+  }
+  else if (stepIndex === 3) {
+    // Step 3: Visual 24h Timeline Chrono - show all UI, top-down solar system panorama
+    document.body.classList.add('sidebar-fadein', 'main-fadein', 'header-fadein');
+    targetCameraPos.set(0, 340, 800);
+    targetLookAt.set(0, 0, -100);
+  }
+  else if (stepIndex === 4) {
+    // Step 4: Vanilla Drag Snapping - show all UI, side profiles
+    document.body.classList.add('sidebar-fadein', 'main-fadein', 'header-fadein');
+    if (planetGroup) {
+      targetCameraPos.set(-260, 120, 600);
+      targetLookAt.set(planetGroup.position.x, planetGroup.position.y, planetGroup.position.z);
+    }
+  }
+}
+
 // Render Loop
 let moonAngle = 0;
 function animate() {
   requestAnimationFrame(animate);
   
-  // Easing interpolation for mouse parallax
-  mouseX += (targetMouseX - mouseX) * 0.055;
-  mouseY += (targetMouseY - mouseY) * 0.055;
-  
-  // Smoothly displace camera slightly based on mouse
-  camera.position.x = mouseX * 220;
-  camera.position.y = -mouseY * 200;
-  camera.lookAt(scene.position);
+  // Update camera positions based on cinematic mode
+  if (cinematicMode) {
+    if (tourStep === 1 && moonMesh && planetGroup) {
+      // Dynamic camera tracking of the orbiting moon in step 1
+      const moonWorldPos = new THREE.Vector3();
+      moonMesh.getWorldPosition(moonWorldPos);
+      
+      targetCameraPos.set(
+        moonWorldPos.x - 65,
+        moonWorldPos.y + 12,
+        moonWorldPos.z + 85
+      );
+      targetLookAt.copy(moonWorldPos);
+    }
+    
+    // Lerp smoothly to tour step coordinates
+    camera.position.lerp(targetCameraPos, 0.04);
+    currentLookAt.lerp(targetLookAt, 0.04);
+    camera.lookAt(currentLookAt);
+  } else {
+    // Normal mouse parallax rotation easing
+    mouseX += (targetMouseX - mouseX) * 0.055;
+    mouseY += (targetMouseY - mouseY) * 0.055;
+    
+    const defaultX = window.innerWidth > 1300 ? (window.innerWidth * 0.22) : 0;
+    const defaultY = window.innerWidth > 1300 ? 40 : 0;
+    const defaultZ = window.innerWidth > 1300 ? -100 : -200;
+    
+    targetCameraPos.set(mouseX * 220 + defaultX, -mouseY * 200 + defaultY, 700 + defaultZ);
+    targetLookAt.set(defaultX, defaultY, defaultZ);
+    
+    camera.position.lerp(targetCameraPos, 0.055);
+    currentLookAt.lerp(targetLookAt, 0.055);
+    camera.lookAt(currentLookAt);
+  }
   
   // Slowly rotate planet and ring
   if (planetMesh) planetMesh.rotation.y += 0.0016;
@@ -335,7 +421,7 @@ function animate() {
     moonMesh.rotation.y += 0.01;
   }
   
-  // Twinkle stars (slight oscillation on opacity in shader phase simulation)
+  // Twinkle stars
   if (starParticles) {
     starParticles.rotation.y += 0.0002;
     starParticles.rotation.x += 0.0001;

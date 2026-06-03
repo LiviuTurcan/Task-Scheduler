@@ -742,3 +742,34 @@ body.theme-light .visual-blocks-col {
   background-image: linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px) !important;
 }
 
+/* ==========================================================================
+   CINEMATIC TOUR LAYOUT ASSEMBLY OVERRIDES
+   ========================================================================== */
+body.tour-cinematic-mode header.glass-card,
+body.tour-cinematic-mode aside.sidebar-dock,
+body.tour-cinematic-mode main.dashboard-grid {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(20px);
+  transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body.tour-cinematic-mode.sidebar-fadein aside.sidebar-dock {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) !important;
+}
+
+body.tour-cinematic-mode.main-fadein main.dashboard-grid {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) !important;
+}
+
+body.tour-cinematic-mode.header-fadein header.glass-card {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) !important;
+}
+
+
