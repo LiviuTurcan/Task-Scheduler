@@ -6,8 +6,8 @@ let tourCurrentStep = 0;
 
 const tourSteps = [
   {
-    title: "Welcome to Aether Chronos!",
-    text: "Welcome to Aether Chronos! This platform is an <strong>Enterprise-grade C++ Scheduling Engine</strong> that optimizes your task priorities, difficulties, and deadlines into available time slots without conflicts. Let's take a quick tour!",
+    title: "Welcome to Task Scheduler!",
+    text: "Welcome to Task Scheduler! This platform is an <strong>Enterprise-grade C++ Scheduling Engine</strong> that optimizes your task priorities, difficulties, and deadlines into available time slots without conflicts. Let's take a quick tour!",
     target: "header.glass-card",
     position: "bottom"
   },
