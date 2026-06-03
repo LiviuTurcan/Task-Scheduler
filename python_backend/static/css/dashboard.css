@@ -140,6 +140,13 @@ header {
 .theme-swatch.swatch-amber { background-color: #ea580c; color: #ea580c; }
 .theme-swatch.swatch-emerald { background-color: #059669; color: #059669; }
 .theme-swatch.swatch-sakura { background-color: #ec4899; color: #ec4899; }
+.theme-swatch.swatch-light { background-color: #4f46e5; color: #4f46e5; }
+.theme-swatch.swatch-ocean { background-color: #06b6d4; color: #06b6d4; }
+.theme-swatch.swatch-sunset { background-color: #f43f5e; color: #f43f5e; }
+.theme-swatch.swatch-nord { background-color: #88c0d0; color: #88c0d0; }
+.theme-swatch.swatch-forest { background-color: #a3e635; color: #a3e635; }
+.theme-swatch.swatch-slate { background-color: #94a3b8; color: #94a3b8; }
+
 
 /* Glowing Action Button */
 .btn-action-primary {

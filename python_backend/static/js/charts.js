@@ -47,12 +47,12 @@ function initAnalyticsCharts() {
       },
       scales: {
         y: {
-          grid: { color: 'rgba(255, 255, 255, 0.03)' },
-          ticks: { color: '#64748b', font: { family: 'Outfit', size: 10 } }
+          grid: { color: getThemeColorToken('--chart-grid') || 'rgba(255, 255, 255, 0.03)' },
+          ticks: { color: getThemeColorToken('--chart-text') || '#64748b', font: { family: 'Outfit', size: 10 } }
         },
         x: {
           grid: { display: false },
-          ticks: { color: '#64748b', font: { family: 'Outfit', size: 10 } }
+          ticks: { color: getThemeColorToken('--chart-text') || '#64748b', font: { family: 'Outfit', size: 10 } }
         }
       }
     }
@@ -90,9 +90,9 @@ function initAnalyticsCharts() {
       },
       scales: {
         r: {
-          grid: { color: 'rgba(255, 255, 255, 0.04)' },
-          angleLines: { color: 'rgba(255, 255, 255, 0.04)' },
-          pointLabels: { color: '#64748b', font: { family: 'Outfit', size: 9, weight: '700' } },
+          grid: { color: getThemeColorToken('--chart-grid') || 'rgba(255, 255, 255, 0.04)' },
+          angleLines: { color: getThemeColorToken('--chart-grid') || 'rgba(255, 255, 255, 0.04)' },
+          pointLabels: { color: getThemeColorToken('--chart-text') || '#64748b', font: { family: 'Outfit', size: 9, weight: '700' } },
           ticks: { display: false }
         }
       }
@@ -262,12 +262,22 @@ function updateChartsThemeColors() {
 
   const themeAccent = getThemeColorToken('--neon-accent') || '#a855f7';
   const themeCyan = getThemeColorToken('--neon-cyan') || '#06b6d4';
+  const gridColor = getThemeColorToken('--chart-grid') || 'rgba(255, 255, 255, 0.03)';
+  const textColor = getThemeColorToken('--chart-text') || '#64748b';
 
   // Recolor bar workload
   workloadChart.data.datasets[0].backgroundColor = themeAccent + '33';
   workloadChart.data.datasets[0].borderColor = themeAccent;
   workloadChart.data.datasets[0].hoverBackgroundColor = themeAccent + '77';
   workloadChart.options.plugins.tooltip.borderColor = themeAccent;
+  
+  if (workloadChart.options.scales && workloadChart.options.scales.y) {
+    workloadChart.options.scales.y.grid.color = gridColor;
+    workloadChart.options.scales.y.ticks.color = textColor;
+  }
+  if (workloadChart.options.scales && workloadChart.options.scales.x) {
+    workloadChart.options.scales.x.ticks.color = textColor;
+  }
   workloadChart.update();
 
   // Recolor radar
@@ -276,6 +286,12 @@ function updateChartsThemeColors() {
   cognitiveChart.data.datasets[0].pointBackgroundColor = themeCyan;
   cognitiveChart.data.datasets[0].pointHoverBorderColor = themeCyan;
   cognitiveChart.options.plugins.tooltip.borderColor = themeCyan;
+  
+  if (cognitiveChart.options.scales && cognitiveChart.options.scales.r) {
+    cognitiveChart.options.scales.r.grid.color = gridColor;
+    cognitiveChart.options.scales.r.angleLines.color = gridColor;
+    cognitiveChart.options.scales.r.pointLabels.color = textColor;
+  }
   cognitiveChart.update();
 }
 

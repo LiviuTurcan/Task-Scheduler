@@ -612,12 +612,18 @@
           <label style="margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--text-secondary);">
             Theme Preset
           </label>
-          <div class="theme-swatch-row" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; display: flex; gap: 10px; justify-content: center;">
-            <button onclick="setGlobalThemePreset('theme-violet')" class="theme-swatch swatch-violet active" style="width: 24px; height: 24px; border-radius: 50%;" title="Cyber Violet"></button>
-            <button onclick="setGlobalThemePreset('theme-oled')" class="theme-swatch swatch-oled" style="width: 24px; height: 24px; border-radius: 50%;" title="OLED Void"></button>
-            <button onclick="setGlobalThemePreset('theme-amber')" class="theme-swatch swatch-amber" style="width: 24px; height: 24px; border-radius: 50%;" title="Cyber Orange"></button>
-            <button onclick="setGlobalThemePreset('theme-emerald')" class="theme-swatch swatch-emerald" style="width: 24px; height: 24px; border-radius: 50%;" title="Matrix Emerald"></button>
-            <button onclick="setGlobalThemePreset('theme-sakura')" class="theme-swatch swatch-sakura" style="width: 24px; height: 24px; border-radius: 50%;" title="Sakura Pink"></button>
+          <div class="theme-swatch-row" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="setGlobalThemePreset('theme-violet')" class="theme-swatch swatch-violet active" style="width: 22px; height: 22px; border-radius: 50%;" title="Cyber Violet"></button>
+            <button onclick="setGlobalThemePreset('theme-oled')" class="theme-swatch swatch-oled" style="width: 22px; height: 22px; border-radius: 50%;" title="OLED Void"></button>
+            <button onclick="setGlobalThemePreset('theme-amber')" class="theme-swatch swatch-amber" style="width: 22px; height: 22px; border-radius: 50%;" title="Cyber Orange"></button>
+            <button onclick="setGlobalThemePreset('theme-emerald')" class="theme-swatch swatch-emerald" style="width: 22px; height: 22px; border-radius: 50%;" title="Matrix Emerald"></button>
+            <button onclick="setGlobalThemePreset('theme-sakura')" class="theme-swatch swatch-sakura" style="width: 22px; height: 22px; border-radius: 50%;" title="Sakura Pink"></button>
+            <button onclick="setGlobalThemePreset('theme-light')" class="theme-swatch swatch-light" style="width: 22px; height: 22px; border-radius: 50%;" title="Snow White (Light)"></button>
+            <button onclick="setGlobalThemePreset('theme-ocean')" class="theme-swatch swatch-ocean" style="width: 22px; height: 22px; border-radius: 50%;" title="Deep Ocean"></button>
+            <button onclick="setGlobalThemePreset('theme-sunset')" class="theme-swatch swatch-sunset" style="width: 22px; height: 22px; border-radius: 50%;" title="Sunset Glow"></button>
+            <button onclick="setGlobalThemePreset('theme-nord')" class="theme-swatch swatch-nord" style="width: 22px; height: 22px; border-radius: 50%;" title="Nordic Frost"></button>
+            <button onclick="setGlobalThemePreset('theme-forest')" class="theme-swatch swatch-forest" style="width: 22px; height: 22px; border-radius: 50%;" title="Forest Moss"></button>
+            <button onclick="setGlobalThemePreset('theme-slate')" class="theme-swatch swatch-slate" style="width: 22px; height: 22px; border-radius: 50%;" title="Monochrome Slate"></button>
           </div>
         </div>
 
@@ -797,10 +803,12 @@
     function setGlobalThemePreset(themeId) {
       document.body.className = '';
       document.body.classList.add(themeId);
+      localStorage.setItem('aether_theme_preset', themeId);
       
       // Update theme swatches active state
       document.querySelectorAll('.theme-swatch').forEach(sw => sw.classList.remove('active'));
-      const activeSwatch = document.querySelector(`.theme-swatch.swatch-${themeId.replace('theme-', '')}`);
+      const swatchSuffix = themeId.replace('theme-', '');
+      const activeSwatch = document.querySelector(`.theme-swatch.swatch-${swatchSuffix}`);
       if (activeSwatch) activeSwatch.classList.add('active');
       
       // Trigger color updates in Chart.js if initialized
@@ -809,9 +817,25 @@
       }
       
       if (typeof showSpringToast === 'function') {
-        showSpringToast(`Switched theme preset to ${themeId.replace('theme-', '').toUpperCase()}`);
+        showSpringToast(`Switched theme preset to ${swatchSuffix.toUpperCase()}`);
       }
     }
+
+    // Apply stored theme on initial parse to prevent flashes
+    (function() {
+      const savedTheme = localStorage.getItem('aether_theme_preset') || 'theme-violet';
+      document.body.className = '';
+      document.body.classList.add(savedTheme);
+      
+      // Wait for DOM to sync swatch active classes
+      window.addEventListener('DOMContentLoaded', () => {
+        const activeSwatch = document.querySelector(`.theme-swatch.swatch-${savedTheme.replace('theme-', '')}`);
+        if (activeSwatch) {
+          document.querySelectorAll('.theme-swatch').forEach(sw => sw.classList.remove('active'));
+          activeSwatch.classList.add('active');
+        }
+      });
+    })();
   </script>
 </body>
 </html>

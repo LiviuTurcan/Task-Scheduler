@@ -43,6 +43,12 @@ body.theme-violet {
 
   --border-wire: 1px solid rgba(168, 85, 247, 0.18);
   --border-wire-hover: 1px solid rgba(168, 85, 247, 0.45);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #64748b;
 }
 
 /* THEME 2: OLED VOID (PITCH BLACK & COBALT BLUE) */
@@ -75,6 +81,12 @@ body.theme-oled {
 
   --border-wire: 1px solid rgba(37, 99, 235, 0.2);
   --border-wire-hover: 1px solid rgba(37, 99, 235, 0.5);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #64748b;
 }
 
 /* THEME 3: CYBER AMBER (PULSING GOLD ORANGE) */
@@ -107,6 +119,12 @@ body.theme-amber {
 
   --border-wire: 1px solid rgba(217, 119, 6, 0.2);
   --border-wire-hover: 1px solid rgba(217, 119, 6, 0.5);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #64748b;
 }
 
 /* THEME 4: MATRIX EMERALD (VINTAGE TERMINAL GREEN) */
@@ -139,6 +157,12 @@ body.theme-emerald {
 
   --border-wire: 1px solid rgba(5, 150, 105, 0.2);
   --border-wire-hover: 1px solid rgba(5, 150, 105, 0.5);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #64748b;
 }
 
 /* THEME 5: SAKURA PINK (DEEP CHERRY & PASTEL ROSE) */
@@ -171,9 +195,243 @@ body.theme-sakura {
 
   --border-wire: 1px solid rgba(219, 39, 119, 0.2);
   --border-wire-hover: 1px solid rgba(219, 39, 119, 0.5);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #64748b;
 }
 
-/* Common text variables */
+/* THEME 6: SNOW WHITE (MANDATORY LIGHT THEME) */
+body.theme-light {
+  --bg-obsidian: #f8fafc;
+  --bg-void: #f1f5f9;
+  --bg-panel: rgba(255, 255, 255, 0.72);
+  --bg-panel-hover: rgba(255, 255, 255, 0.88);
+  
+  --neon-accent: #4f46e5;
+  --neon-accent-rgb: 79, 70, 229;
+  --neon-purple: #6366f1;
+  --neon-purple-dim: rgba(99, 102, 241, 0.12);
+  --neon-purple-glow: rgba(99, 102, 241, 0.35);
+  
+  --neon-cyan: #0ea5e9;
+  --neon-cyan-dim: rgba(14, 165, 233, 0.12);
+  --neon-cyan-glow: rgba(14, 165, 233, 0.35);
+  
+  --neon-orange: #f97316;
+  --neon-orange-dim: rgba(249, 115, 22, 0.12);
+  --neon-orange-glow: rgba(249, 115, 22, 0.35);
+  
+  --neon-emerald: #10b981;
+  --neon-emerald-dim: rgba(16, 185, 129, 0.12);
+  --neon-emerald-glow: rgba(16, 185, 129, 0.35);
+
+  --neon-rose: #ef4444;
+  --neon-rose-dim: rgba(239, 68, 68, 0.12);
+
+  --border-wire: 1px solid rgba(79, 70, 229, 0.15);
+  --border-wire-hover: 1px solid rgba(79, 70, 229, 0.4);
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --chart-grid: rgba(15, 23, 42, 0.08);
+  --chart-text: #475569;
+}
+
+/* THEME 7: DEEP OCEAN */
+body.theme-ocean {
+  --bg-obsidian: #020b14;
+  --bg-void: #031220;
+  --bg-panel: rgba(4, 24, 43, 0.72);
+  --bg-panel-hover: rgba(6, 35, 62, 0.88);
+  
+  --neon-accent: #06b6d4;
+  --neon-accent-rgb: 6, 182, 212;
+  --neon-purple: #3b82f6;
+  --neon-purple-dim: rgba(59, 130, 246, 0.25);
+  --neon-purple-glow: rgba(59, 130, 246, 0.6);
+  
+  --neon-cyan: #06b6d4;
+  --neon-cyan-dim: rgba(6, 182, 212, 0.25);
+  --neon-cyan-glow: rgba(6, 182, 212, 0.6);
+  
+  --neon-orange: #f59e0b;
+  --neon-orange-dim: rgba(245, 158, 11, 0.25);
+  --neon-orange-glow: rgba(245, 158, 11, 0.6);
+  
+  --neon-emerald: #10b981;
+  --neon-emerald-dim: rgba(16, 185, 129, 0.25);
+  --neon-emerald-glow: rgba(16, 185, 129, 0.6);
+
+  --neon-rose: #ef4444;
+  --neon-rose-dim: rgba(239, 68, 68, 0.25);
+
+  --border-wire: 1px solid rgba(6, 182, 212, 0.18);
+  --border-wire-hover: 1px solid rgba(6, 182, 212, 0.45);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #64748b;
+}
+
+/* THEME 8: SUNSET GLOW */
+body.theme-sunset {
+  --bg-obsidian: #0f0505;
+  --bg-void: #1a0808;
+  --bg-panel: rgba(36, 10, 10, 0.72);
+  --bg-panel-hover: rgba(51, 15, 15, 0.88);
+  
+  --neon-accent: #f43f5e;
+  --neon-accent-rgb: 244, 63, 94;
+  --neon-purple: #ec4899;
+  --neon-purple-dim: rgba(236, 72, 153, 0.25);
+  --neon-purple-glow: rgba(236, 72, 153, 0.6);
+  
+  --neon-cyan: #f43f5e;
+  --neon-cyan-dim: rgba(244, 63, 94, 0.25);
+  --neon-cyan-glow: rgba(244, 63, 94, 0.6);
+  
+  --neon-orange: #f97316;
+  --neon-orange-dim: rgba(249, 115, 22, 0.25);
+  --neon-orange-glow: rgba(249, 115, 22, 0.6);
+  
+  --neon-emerald: #10b981;
+  --neon-emerald-dim: rgba(16, 185, 129, 0.25);
+  --neon-emerald-glow: rgba(16, 185, 129, 0.6);
+
+  --neon-rose: #ef4444;
+  --neon-rose-dim: rgba(239, 68, 68, 0.25);
+
+  --border-wire: 1px solid rgba(244, 63, 94, 0.18);
+  --border-wire-hover: 1px solid rgba(244, 63, 94, 0.45);
+
+  --text-primary: #fff5f5;
+  --text-secondary: #fed7d7;
+  --text-muted: #a0aec0;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #a0aec0;
+}
+
+/* THEME 9: NORDIC FROST */
+body.theme-nord {
+  --bg-obsidian: #1a1d24;
+  --bg-void: #16181e;
+  --bg-panel: rgba(46, 52, 64, 0.72);
+  --bg-panel-hover: rgba(59, 66, 82, 0.88);
+  
+  --neon-accent: #88c0d0;
+  --neon-accent-rgb: 136, 192, 208;
+  --neon-purple: #81a1c1;
+  --neon-purple-dim: rgba(129, 161, 193, 0.25);
+  --neon-purple-glow: rgba(129, 161, 193, 0.6);
+  
+  --neon-cyan: #88c0d0;
+  --neon-cyan-dim: rgba(136, 192, 208, 0.25);
+  --neon-cyan-glow: rgba(136, 192, 208, 0.6);
+  
+  --neon-orange: #d08770;
+  --neon-orange-dim: rgba(208, 135, 112, 0.25);
+  --neon-orange-glow: rgba(208, 135, 112, 0.6);
+  
+  --neon-emerald: #a3be8c;
+  --neon-emerald-dim: rgba(163, 190, 140, 0.25);
+  --neon-emerald-glow: rgba(163, 190, 140, 0.6);
+
+  --neon-rose: #bf616a;
+  --neon-rose-dim: rgba(191, 97, 106, 0.25);
+
+  --border-wire: 1px solid rgba(136, 192, 208, 0.18);
+  --border-wire-hover: 1px solid rgba(136, 192, 208, 0.45);
+
+  --text-primary: #eceff4;
+  --text-secondary: #d8dee9;
+  --text-muted: #4c566a;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #d8dee9;
+}
+
+/* THEME 10: FOREST MOSS */
+body.theme-forest {
+  --bg-obsidian: #040805;
+  --bg-void: #070e0a;
+  --bg-panel: rgba(12, 24, 16, 0.72);
+  --bg-panel-hover: rgba(18, 36, 24, 0.88);
+  
+  --neon-accent: #a3e635;
+  --neon-accent-rgb: 163, 230, 53;
+  --neon-purple: #84cc16;
+  --neon-purple-dim: rgba(132, 204, 22, 0.25);
+  --neon-purple-glow: rgba(132, 204, 22, 0.6);
+  
+  --neon-cyan: #22c55e;
+  --neon-cyan-dim: rgba(34, 197, 94, 0.25);
+  --neon-cyan-glow: rgba(34, 197, 94, 0.6);
+  
+  --neon-orange: #f59e0b;
+  --neon-orange-dim: rgba(245, 158, 11, 0.25);
+  --neon-orange-glow: rgba(245, 158, 11, 0.6);
+  
+  --neon-emerald: #10b981;
+  --neon-emerald-dim: rgba(16, 185, 129, 0.25);
+  --neon-emerald-glow: rgba(16, 185, 129, 0.6);
+
+  --neon-rose: #ef4444;
+  --neon-rose-dim: rgba(239, 68, 68, 0.25);
+
+  --border-wire: 1px solid rgba(163, 230, 53, 0.18);
+  --border-wire-hover: 1px solid rgba(163, 230, 53, 0.45);
+
+  --text-primary: #f0fdf4;
+  --text-secondary: #dcfce7;
+  --text-muted: #718096;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #718096;
+}
+
+/* THEME 11: MONOCHROME SLATE */
+body.theme-slate {
+  --bg-obsidian: #0f172a;
+  --bg-void: #020617;
+  --bg-panel: rgba(15, 23, 42, 0.72);
+  --bg-panel-hover: rgba(30, 41, 59, 0.88);
+  
+  --neon-accent: #f8fafc;
+  --neon-accent-rgb: 248, 250, 252;
+  --neon-purple: #cbd5e1;
+  --neon-purple-dim: rgba(203, 213, 225, 0.25);
+  --neon-purple-glow: rgba(203, 213, 225, 0.6);
+  
+  --neon-cyan: #94a3b8;
+  --neon-cyan-dim: rgba(148, 163, 184, 0.25);
+  --neon-cyan-glow: rgba(148, 163, 184, 0.6);
+  
+  --neon-orange: #64748b;
+  --neon-orange-dim: rgba(100, 116, 139, 0.25);
+  --neon-orange-glow: rgba(100, 116, 139, 0.6);
+  
+  --neon-emerald: #cbd5e1;
+  --neon-emerald-dim: rgba(203, 213, 225, 0.25);
+  --neon-emerald-glow: rgba(203, 213, 225, 0.6);
+
+  --neon-rose: #f43f5e;
+  --neon-rose-dim: rgba(244, 63, 94, 0.25);
+
+  --border-wire: 1px solid rgba(248, 250, 252, 0.18);
+  --border-wire-hover: 1px solid rgba(248, 250, 252, 0.45);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --chart-grid: rgba(255, 255, 255, 0.03);
+  --chart-text: #64748b;
+}
+
+/* Fallback/Common text variables */
 :root {
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
@@ -317,3 +575,170 @@ button:active, .btn-circle-add:active {
 .theme-swatch:hover {
   transform: scale(1.3) rotate(15deg);
 }
+
+/* ==========================================================================
+   LIGHT THEME OVERRIDES (.theme-light)
+   ========================================================================== */
+body.theme-light {
+  background-color: var(--bg-obsidian);
+  color: var(--text-primary);
+}
+
+body.theme-light .glow-blob {
+  opacity: 0.06;
+}
+
+body.theme-light .grid-matrix-overlay {
+  opacity: 0.3;
+}
+
+/* Glass card styling inside Light Theme */
+body.theme-light .glass-card {
+  background: var(--bg-panel);
+  border: var(--border-wire);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+body.theme-light .glass-card:hover {
+  border-color: var(--border-wire-hover);
+  box-shadow: 0 10px 40px rgba(var(--neon-accent-rgb), 0.12);
+}
+
+/* Header elements */
+body.theme-light .theme-picker-header {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+body.theme-light .theme-swatch.active {
+  border-color: var(--neon-accent) !important;
+  box-shadow: 0 0 10px rgba(var(--neon-accent-rgb), 0.4) !important;
+}
+
+body.theme-light .gradient-text {
+  background: linear-gradient(135deg, var(--text-primary) 15%, var(--neon-purple) 65%, var(--neon-cyan) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Sidebar tab navigation */
+body.theme-light .dock-tabs-nav {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+}
+body.theme-light .dock-tab-btn:hover {
+  color: var(--text-primary);
+}
+body.theme-light .dock-tab-btn.active {
+  color: #fff !important;
+}
+body.theme-light .dock-header h3 {
+  color: var(--text-primary) !important;
+}
+
+/* CRUD lists and cards */
+body.theme-light .card-item {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+body.theme-light .card-item:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(var(--neon-accent-rgb), 0.3) !important;
+  box-shadow: 0 10px 20px rgba(var(--neon-accent-rgb), 0.04);
+}
+body.theme-light .card-item-title {
+  color: var(--text-primary) !important;
+}
+body.theme-light .card-action-btn:hover {
+  color: var(--neon-accent) !important;
+}
+body.theme-light .card-subtask-checklist-hud {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Input Fields and Selectors */
+body.theme-light .hud-input {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  color: var(--text-primary) !important;
+}
+body.theme-light .hud-input:focus {
+  background: #ffffff !important;
+  border-color: var(--neon-accent) !important;
+  box-shadow: 0 0 12px rgba(var(--neon-accent-rgb), 0.15) !important;
+}
+body.theme-light .hud-select-multi {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+body.theme-light .hud-switch-title {
+  color: var(--text-primary) !important;
+}
+body.theme-light input:checked + .hud-toggle-slider:before {
+  background-color: #fff !important;
+}
+
+/* Dialog Modals */
+body.theme-light .hud-modal-overlay {
+  background: rgba(15, 23, 42, 0.4) !important;
+}
+body.theme-light .hud-modal-title {
+  color: var(--text-primary) !important;
+}
+body.theme-light .hud-modal-close:hover {
+  color: var(--neon-rose) !important;
+}
+body.theme-light .danger-item-card strong {
+  color: var(--text-primary) !important;
+}
+
+/* Terminals */
+body.theme-light .code-terminal {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #1e293b !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+body.theme-light .terminal-header-deck {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Toasts */
+body.theme-light .hud-toast-node {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--neon-emerald) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Numeric text & Gauges */
+body.theme-light .hud-label-group .hud-val,
+body.theme-light .hud-svg-text {
+  color: var(--text-primary) !important;
+}
+
+/* Calendar elements overrides */
+body.theme-light .week-nav-bar {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+body.theme-light .week-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+body.theme-light .week-nav-btn.active .week-btn-title,
+body.theme-light .week-nav-btn.active .week-btn-subtitle {
+  color: #fff !important;
+}
+body.theme-light .view-segment-control {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+body.theme-light .view-segment-btn.active {
+  color: #fff !important;
+}
+body.theme-light .timeline-viewport {
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+body.theme-light .visual-blocks-col {
+  border-left-color: rgba(0, 0, 0, 0.08) !important;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px) !important;
+}
+
