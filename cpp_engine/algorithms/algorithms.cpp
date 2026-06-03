@@ -1,5 +1,4 @@
 #include "algorithms.h"
-
 #include <algorithm>
 #include <functional>
 #include <limits>
