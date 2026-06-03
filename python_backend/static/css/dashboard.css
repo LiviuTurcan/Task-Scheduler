@@ -1355,21 +1355,47 @@ input:checked + .hud-toggle-slider:before {
 
 #pane-json.fullscreen-book {
   position: fixed !important;
-  top: 30px !important;
-  left: 30px !important;
-  right: 30px !important;
-  bottom: 30px !important;
-  width: calc(100vw - 60px) !important;
-  height: calc(100vh - 60px) !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
   z-index: 200000 !important;
-  background: rgba(10, 5, 25, 0.98) !important;
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  background: rgba(4, 2, 10, 0.75) !important; /* Dimmed background */
+  backdrop-filter: blur(10px);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+#pane-json.fullscreen-book .book-container-box {
+  width: 1200px !important;
+  max-width: 90vw !important;
+  height: 800px !important;
+  max-height: 85vh !important;
+  background: rgba(12, 6, 26, 0.96) !important;
+  border: 1px solid rgba(139, 92, 246, 0.45) !important;
   border-radius: 20px;
   padding: 30px !important;
-  box-shadow: 0 0 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 100px rgba(0, 0, 0, 0.95), 0 0 40px rgba(139, 92, 246, 0.4);
   display: flex !important;
   flex-direction: column !important;
+  animation: bookSpringOpen 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bookSpringOpen {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 #pane-json.fullscreen-book .dock-header {
@@ -1379,7 +1405,7 @@ input:checked + .hud-toggle-slider:before {
 }
 
 #pane-json.fullscreen-book .dock-header h3 {
-  font-size: 20px;
+  font-size: 22px;
   color: #fff;
   font-weight: 800;
   text-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
@@ -1409,7 +1435,7 @@ input:checked + .hud-toggle-slider:before {
 }
 
 #pane-json.fullscreen-book .code-terminal {
-  font-size: 13px !important;
+  font-size: 12.5px !important;
   line-height: 1.6 !important;
 }
 
