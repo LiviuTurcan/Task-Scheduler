@@ -1,5 +1,6 @@
-# Compiled binaries
+# Compiled binaries (except the pre-built scheduler)
 *.exe
+!cpp_engine/scheduler.exe
 *.pdf
 
 # Python

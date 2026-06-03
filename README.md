@@ -1,6 +1,7 @@
 # Task Scheduler
 
-A smart task scheduling application with a C++ optimization engine and a Python/Flask web interface.
+Task Scheduler made for PBL Sem 2 AIA.  
+A smart task scheduling application with a **C++ optimization engine** and a **Python/Flask web interface**.
 
 ## Quick Start (One-Click Setup)
 
@@ -33,7 +34,7 @@ The script will:
 | **Python 3.10+** | [python.org](https://www.python.org/downloads/) | `brew install python3` | `sudo apt install python3 python3-venv python3-pip` |
 | **C++ Compiler** | MinGW-w64 / MSYS2 (`g++`) | `xcode-select --install` | `sudo apt install g++` |
 
-> **Note:** The C++ scheduler binary (`scheduler.exe` on Windows, `scheduler` on macOS/Linux) is already pre-compiled for Windows in the repository. macOS and Linux users need a C++ compiler to build it on first run.
+> **Note:** The pre-compiled `scheduler.exe` (Windows) is included in the repository. macOS and Linux users will need a C++ compiler — the setup script handles compilation automatically.
 
 ---
 
@@ -94,36 +95,56 @@ python -m python_backend.smoke_test
 ## Project Structure
 
 ```
-Task-Scheduler-main/
-├── setup_and_run.bat       # Windows one-click launcher
-├── setup_and_run.sh        # macOS / Linux one-click launcher
-├── requirements.txt        # Python dependencies (Flask)
+Task-Scheduler/
+├── setup_and_run.bat          # Windows one-click launcher
+├── setup_and_run.sh           # macOS / Linux one-click launcher
+├── requirements.txt           # Python dependencies (Flask)
 ├── README.md
-├── cpp_engine/             # C++ scheduling optimization engine
-│   ├── main.cpp
-│   ├── json_io.cpp / .h
-│   ├── models.h
-│   ├── scheduler.exe       # Pre-compiled Windows binary
-│   ├── algorithms/         # Scheduling algorithms
-│   └── nlohmann/           # JSON library (header-only)
-├── data/                   # Runtime data (JSON)
+├── .gitignore
+│
+├── cpp_engine/                # C++ scheduling optimization engine
+│   ├── main.cpp               #   Entry point
+│   ├── json_io.cpp / .h       #   JSON file I/O
+│   ├── models.h               #   Data models (Task, TimeSlot, etc.)
+│   ├── scheduler.exe          #   Pre-compiled Windows binary
+│   ├── algorithms/            #   Scheduling algorithms
+│   │   ├── scheduler.cpp/.h   #     Core backtracking scheduler
+│   │   ├── algorithms.cpp/.h  #     Utility algorithms
+│   │   ├── scoring.cpp/.h     #     Schedule scoring
+│   │   └── time_utils.cpp/.h  #     DateTime helpers
+│   └── nlohmann/              #   JSON library (header-only)
+│       └── json.hpp
+│
+├── data/                      # Runtime data (JSON)
 │   ├── tasks.json
 │   ├── availability.json
 │   ├── fixed_events.json
 │   └── schedule_output.json
-└── python_backend/         # Flask web backend
-    ├── web.py              # HTTP routes
-    ├── app_controller.py   # Business logic
-    ├── cpp_bridge.py       # Subprocess bridge to C++ engine
-    ├── storage.py          # JSON file persistence
-    ├── validators.py       # Input validation
-    ├── reports.py          # Export helpers (TXT/CSV/JSON)
-    ├── smoke_test.py       # Automated tests
-    ├── static/             # Frontend assets
-    │   ├── css/            # Stylesheets
-    │   └── js/             # JavaScript modules
+│
+└── python_backend/            # Flask web backend
+    ├── __init__.py            #   Package init
+    ├── web.py                 #   HTTP routes (Flask app)
+    ├── app_controller.py      #   Business logic controller
+    ├── cpp_bridge.py          #   Subprocess bridge to C++ engine
+    ├── storage.py             #   JSON file persistence
+    ├── validators.py          #   Input validation
+    ├── reports.py             #   Export helpers (TXT/CSV/JSON)
+    ├── smoke_test.py          #   Automated smoke tests
+    ├── static/                #   Frontend assets
+    │   ├── css/
+    │   │   ├── global.css     #     CSS variables & base styles
+    │   │   ├── dashboard.css  #     Layout, cards, modals
+    │   │   └── calendar.css   #     Calendar view styles
+    │   └── js/
+    │       ├── state.js       #     App state & API calls
+    │       ├── modals.js      #     Modal dialogs (add/edit/fix)
+    │       ├── calendar_views.js  #  Week & agenda calendar
+    │       ├── charts.js      #     Chart.js analytics
+    │       ├── exports.js     #     Download & compiler log
+    │       ├── canvas.js      #     Particle background
+    │       └── tour.js        #     Interactive guided tour
     └── templates/
-        └── index.html      # Main UI template
+        └── index.html         #   Main SPA template
 ```
 
 ---
@@ -131,6 +152,8 @@ Task-Scheduler-main/
 ## Technology
 
 - **Backend:** Python 3 + Flask
-- **Scheduling Engine:** C++ 17 with backtracking optimization
+- **Scheduling Engine:** C++17 with backtracking optimization
 - **Frontend:** HTML5 + CSS3 + Vanilla JavaScript
+- **Charts:** Chart.js
+- **Icons:** Lucide Icons
 - **JSON Library:** nlohmann/json (header-only, included)
