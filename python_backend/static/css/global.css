@@ -1,0 +1,319 @@
+/* ==========================================================================
+   GLOBAL STYLE LAYOUT, CONFIG RESET & FIVE ENTERPRISE THEMES
+   ========================================================================== */
+
+/* 1. CSS VARIABLES FOR THE 5 PREMIUM THEME PRESETS */
+:root {
+  --font-title: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-all: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-width: 440px;
+}
+
+/* THEME 1: CYBER VIOLET (DEFAULT) */
+body.theme-violet {
+  --bg-obsidian: #030107;
+  --bg-void: #06030f;
+  --bg-panel: rgba(10, 5, 24, 0.72);
+  --bg-panel-hover: rgba(16, 8, 38, 0.88);
+  
+  --neon-accent: #a855f7;
+  --neon-accent-rgb: 168, 85, 247;
+  --neon-purple: #a855f7;
+  --neon-purple-dim: rgba(168, 85, 247, 0.25);
+  --neon-purple-glow: rgba(168, 85, 247, 0.6);
+  
+  --neon-cyan: #06b6d4;
+  --neon-cyan-dim: rgba(6, 182, 212, 0.25);
+  --neon-cyan-glow: rgba(6, 182, 212, 0.6);
+  
+  --neon-orange: #f97316;
+  --neon-orange-dim: rgba(249, 115, 22, 0.25);
+  --neon-orange-glow: rgba(249, 115, 22, 0.6);
+  
+  --neon-emerald: #10b981;
+  --neon-emerald-dim: rgba(16, 185, 129, 0.25);
+  --neon-emerald-glow: rgba(16, 185, 129, 0.6);
+
+  --neon-rose: #f43f5e;
+  --neon-rose-dim: rgba(244, 63, 94, 0.25);
+
+  --border-wire: 1px solid rgba(168, 85, 247, 0.18);
+  --border-wire-hover: 1px solid rgba(168, 85, 247, 0.45);
+}
+
+/* THEME 2: OLED VOID (PITCH BLACK & COBALT BLUE) */
+body.theme-oled {
+  --bg-obsidian: #000000;
+  --bg-void: #020205;
+  --bg-panel: rgba(8, 8, 12, 0.82);
+  --bg-panel-hover: rgba(15, 15, 22, 0.95);
+  
+  --neon-accent: #2563eb;
+  --neon-accent-rgb: 37, 99, 235;
+  --neon-purple: #3b82f6;
+  --neon-purple-dim: rgba(59, 130, 246, 0.25);
+  --neon-purple-glow: rgba(59, 130, 246, 0.6);
+  
+  --neon-cyan: #06b6d4;
+  --neon-cyan-dim: rgba(6, 182, 212, 0.25);
+  --neon-cyan-glow: rgba(6, 182, 212, 0.6);
+  
+  --neon-orange: #f59e0b;
+  --neon-orange-dim: rgba(245, 158, 11, 0.25);
+  --neon-orange-glow: rgba(245, 158, 11, 0.6);
+  
+  --neon-emerald: #10b981;
+  --neon-emerald-dim: rgba(16, 185, 129, 0.25);
+  --neon-emerald-glow: rgba(16, 185, 129, 0.6);
+
+  --neon-rose: #ef4444;
+  --neon-rose-dim: rgba(239, 68, 68, 0.25);
+
+  --border-wire: 1px solid rgba(37, 99, 235, 0.2);
+  --border-wire-hover: 1px solid rgba(37, 99, 235, 0.5);
+}
+
+/* THEME 3: CYBER AMBER (PULSING GOLD ORANGE) */
+body.theme-amber {
+  --bg-obsidian: #060300;
+  --bg-void: #0a0600;
+  --bg-panel: rgba(20, 12, 5, 0.75);
+  --bg-panel-hover: rgba(28, 18, 8, 0.9);
+  
+  --neon-accent: #d97706;
+  --neon-accent-rgb: 217, 119, 6;
+  --neon-purple: #f59e0b;
+  --neon-purple-dim: rgba(245, 158, 11, 0.25);
+  --neon-purple-glow: rgba(245, 158, 11, 0.6);
+  
+  --neon-cyan: #eab308;
+  --neon-cyan-dim: rgba(234, 179, 8, 0.25);
+  --neon-cyan-glow: rgba(234, 179, 8, 0.6);
+  
+  --neon-orange: #ea580c;
+  --neon-orange-dim: rgba(234, 88, 12, 0.25);
+  --neon-orange-glow: rgba(234, 88, 12, 0.6);
+  
+  --neon-emerald: #84cc16;
+  --neon-emerald-dim: rgba(132, 204, 22, 0.25);
+  --neon-emerald-glow: rgba(132, 204, 22, 0.6);
+
+  --neon-rose: #dc2626;
+  --neon-rose-dim: rgba(220, 38, 38, 0.25);
+
+  --border-wire: 1px solid rgba(217, 119, 6, 0.2);
+  --border-wire-hover: 1px solid rgba(217, 119, 6, 0.5);
+}
+
+/* THEME 4: MATRIX EMERALD (VINTAGE TERMINAL GREEN) */
+body.theme-emerald {
+  --bg-obsidian: #010402;
+  --bg-void: #020703;
+  --bg-panel: rgba(4, 14, 8, 0.78);
+  --bg-panel-hover: rgba(8, 22, 13, 0.92);
+  
+  --neon-accent: #059669;
+  --neon-accent-rgb: 5, 150, 105;
+  --neon-purple: #10b981;
+  --neon-purple-dim: rgba(16, 185, 129, 0.25);
+  --neon-purple-glow: rgba(16, 185, 129, 0.6);
+  
+  --neon-cyan: #34d399;
+  --neon-cyan-dim: rgba(52, 211, 153, 0.25);
+  --neon-cyan-glow: rgba(52, 211, 153, 0.6);
+  
+  --neon-orange: #fb923c;
+  --neon-orange-dim: rgba(251, 146, 60, 0.25);
+  --neon-orange-glow: rgba(251, 146, 60, 0.6);
+  
+  --neon-emerald: #059669;
+  --neon-emerald-dim: rgba(5, 150, 105, 0.25);
+  --neon-emerald-glow: rgba(5, 150, 105, 0.6);
+
+  --neon-rose: #f43f5e;
+  --neon-rose-dim: rgba(244, 63, 94, 0.25);
+
+  --border-wire: 1px solid rgba(5, 150, 105, 0.2);
+  --border-wire-hover: 1px solid rgba(5, 150, 105, 0.5);
+}
+
+/* THEME 5: SAKURA PINK (DEEP CHERRY & PASTEL ROSE) */
+body.theme-sakura {
+  --bg-obsidian: #080206;
+  --bg-void: #12030f;
+  --bg-panel: rgba(26, 8, 22, 0.76);
+  --bg-panel-hover: rgba(38, 14, 32, 0.9);
+  
+  --neon-accent: #db2777;
+  --neon-accent-rgb: 219, 39, 119;
+  --neon-purple: #ec4899;
+  --neon-purple-dim: rgba(236, 72, 153, 0.25);
+  --neon-purple-glow: rgba(236, 72, 153, 0.6);
+  
+  --neon-cyan: #a855f7;
+  --neon-cyan-dim: rgba(168, 85, 247, 0.25);
+  --neon-cyan-glow: rgba(168, 85, 247, 0.6);
+  
+  --neon-orange: #f43f5e;
+  --neon-orange-dim: rgba(244, 63, 94, 0.25);
+  --neon-orange-glow: rgba(244, 63, 94, 0.6);
+  
+  --neon-emerald: #10b981;
+  --neon-emerald-dim: rgba(16, 185, 129, 0.25);
+  --neon-emerald-glow: rgba(16, 185, 129, 0.6);
+
+  --neon-rose: #e11d48;
+  --neon-rose-dim: rgba(225, 29, 72, 0.25);
+
+  --border-wire: 1px solid rgba(219, 39, 119, 0.2);
+  --border-wire-hover: 1px solid rgba(219, 39, 119, 0.5);
+}
+
+/* Common text variables */
+:root {
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+}
+
+/* Reset settings */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--bg-obsidian);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.5s ease;
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 15%, var(--neon-purple) 65%, var(--neon-cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 40px rgba(var(--neon-accent-rgb), 0.1);
+}
+
+/* ==========================================================================
+   NEON ATMOSPHERICS AND BACKGROUND GRID
+   ========================================================================== */
+.bg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -4;
+  pointer-events: none;
+}
+
+.glow-blob {
+  position: fixed;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.14;
+  pointer-events: none;
+  z-index: -3;
+  animation: pulseGlow 15s infinite alternate ease-in-out;
+  transition: background 0.5s ease;
+}
+
+.glow-1 {
+  background: radial-gradient(circle, var(--neon-purple) 0%, transparent 70%);
+  top: -15%;
+  right: -10%;
+}
+
+.glow-2 {
+  background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
+  bottom: -15%;
+  left: -10%;
+  animation-delay: -5s;
+}
+
+.glow-3 {
+  background: radial-gradient(circle, var(--neon-orange) 0%, transparent 70%);
+  top: 40%;
+  left: 20%;
+  width: 500px;
+  height: 500px;
+  opacity: 0.05;
+  animation-delay: -10s;
+}
+
+.grid-matrix-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(var(--neon-accent-rgb), 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--neon-accent-rgb), 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  z-index: -2;
+  pointer-events: none;
+  transition: background-image 0.5s ease;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(1) translate(0, 0); opacity: 0.11; }
+  50% { transform: scale(1.18) translate(30px, -25px); opacity: 0.16; }
+  100% { transform: scale(0.9) translate(-25px, 30px); opacity: 0.12; }
+}
+
+#particles-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3;
+  pointer-events: none;
+}
+
+/* Button & interactive hover spring-like physics */
+button, .btn-circle-add, .dock-tab-btn, .week-nav-btn, .view-segment-btn, .theme-swatch {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease !important;
+}
+
+button:hover, .btn-circle-add:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(var(--neon-accent-rgb), 0.45) !important;
+}
+
+button:active, .btn-circle-add:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+.dock-tab-btn:hover {
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+.week-nav-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+}
+
+.theme-swatch:hover {
+  transform: scale(1.3) rotate(15deg);
+}

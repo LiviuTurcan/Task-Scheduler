@@ -1,7 +1,12 @@
-*.pdf
+# Compiled binaries
 *.exe
+*.pdf
 
-
-# Python cache files
+# Python
 __pycache__/
 *.py[cod]
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db

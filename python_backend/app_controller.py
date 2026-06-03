@@ -62,17 +62,88 @@ class AppController:
         return schedule_output
 
     def generate_schedule(self) -> dict[str, Any]:
-        self.load_inputs()
-        self.last_run_result = cpp_bridge.run_scheduler(
-            self.project_root,
-            tasks_path=self.tasks_path,
-            availability_path=self.availability_path,
-            fixed_events_path=self.fixed_events_path,
-            output_path=self.schedule_output_path,
-        )
-        if not self.last_run_result.success:
-            message = self.last_run_result.message or "Unknown scheduler error"
-            raise SchedulerExecutionError(message)
+        # 1. Load inputs
+        tasks, availability, fixed_events = self.load_inputs()
+
+        # 2. Partition tasks into active and fixed
+        active_tasks = []
+        fixed_tasks = []
+        for t in tasks:
+            if t.get("fixed", False):
+                fixed_tasks.append(t)
+            else:
+                active_tasks.append(t)
+
+        # 3. Create virtual fixed events for fixed tasks
+        merged_fixed_events = list(fixed_events)
+        for ft in fixed_tasks:
+            virtual_event = {
+                "id": ft["id"] + 10000,
+                "name": ft["name"],
+                "start": ft["fixed_start"],
+                "end": ft["fixed_end"]
+            }
+            merged_fixed_events.append(virtual_event)
+
+        # 4. Save to temporary file paths
+        tmp_tasks_path = self.data_dir / "tasks_tmp.json"
+        tmp_fixed_events_path = self.data_dir / "fixed_events_tmp.json"
+        tmp_output_path = self.data_dir / "schedule_output_tmp.json"
+
+        storage.save_tasks(active_tasks, tmp_tasks_path)
+        storage.save_fixed_events(merged_fixed_events, tmp_fixed_events_path)
+
+        try:
+            # 5. Run the scheduler with the temporary files
+            self.last_run_result = cpp_bridge.run_scheduler(
+                self.project_root,
+                tasks_path=tmp_tasks_path,
+                availability_path=self.availability_path,
+                fixed_events_path=tmp_fixed_events_path,
+                output_path=tmp_output_path,
+            )
+
+            if not self.last_run_result.success:
+                message = self.last_run_result.message or "Unknown scheduler error"
+                raise SchedulerExecutionError(message)
+
+            # 6. Load temporary output and merge fixed tasks back into the schedule
+            tmp_output = storage.load_schedule_output(tmp_output_path)
+
+            schedule = tmp_output.get("schedule", [])
+            for ft in fixed_tasks:
+                schedule.append({
+                    "task_id": ft["id"],
+                    "task_name": ft["name"],
+                    "start": ft["fixed_start"],
+                    "end": ft["fixed_end"],
+                    "priority": ft.get("priority", 0),
+                    "deadline": ft.get("deadline", "")
+                })
+
+            # Sort schedule chronologically by start time
+            schedule.sort(key=lambda s: s.get("start", ""))
+            tmp_output["schedule"] = schedule
+
+            # Update statistics
+            stats = tmp_output.get("statistics", {})
+            stats["total_tasks"] = len(tasks)
+            stats["scheduled_tasks"] = len(schedule)
+            stats["unscheduled_tasks"] = len(tmp_output.get("unscheduled_tasks", []))
+            tmp_output["statistics"] = stats
+
+            # Save the final merged schedule to the final output path
+            storage._save_json(self.schedule_output_path, tmp_output)
+
+        finally:
+            # 7. Clean up temporary files
+            try:
+                tmp_tasks_path.unlink(missing_ok=True)
+                tmp_fixed_events_path.unlink(missing_ok=True)
+                tmp_output_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
         return self.load_schedule_output()
 
     def export_schedule(

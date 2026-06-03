@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import platform
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+# Use .exe on Windows, plain binary name elsewhere (macOS / Linux)
+_SCHEDULER_BINARY = "scheduler.exe" if platform.system() == "Windows" else "scheduler"
 
 
 def _resolve_path(root: Path, value: str | Path) -> Path:
@@ -42,7 +46,7 @@ def run_scheduler(
 ) -> SchedulerRunResult:
     root = Path(project_root).resolve()
     scheduler_executable = _resolve_path(
-        root, executable or root / "cpp_engine" / "scheduler.exe"
+        root, executable or root / "cpp_engine" / _SCHEDULER_BINARY
     )
     tasks = _resolve_path(root, tasks_path or root / "data" / "tasks.json")
     availability = _resolve_path(
