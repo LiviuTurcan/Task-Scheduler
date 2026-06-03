@@ -38,36 +38,18 @@ def _require_fields(item: Mapping[str, Any], fields: set[str], label: str) -> li
     return [f"{label} is missing required field '{field}'" for field in sorted(fields - item.keys())]
 
 
-def _validate_datetime(container: Any, key: str, label: str, errors: list[str]) -> datetime | None:
-    value = container.get(key)
+def _validate_datetime(value: Any, label: str, errors: list[str]) -> datetime | None:
     if not isinstance(value, str):
         errors.append(f"{label} must be a string in YYYY-MM-DDTHH:MM:SS format")
         return None
-    
-    # Try different formats (lenient date parsing)
-    formats = [
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%dT%H:%M",
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%d %H:%M",
-    ]
-    parsed = None
-    for fmt in formats:
-        try:
-            parsed = datetime.strptime(value.strip(), fmt)
-            break
-        except ValueError:
-            continue
-            
-    if parsed is None:
+    try:
+        parsed = datetime.strptime(value, DATETIME_FORMAT)
+    except ValueError:
         errors.append(f"{label} must use YYYY-MM-DDTHH:MM:SS format")
         return None
-        
-    # Normalize back to the strict format in the mutable container
-    normalized = parsed.strftime(DATETIME_FORMAT)
-    if isinstance(container, dict):
-        container[key] = normalized
-        
+    if parsed.strftime(DATETIME_FORMAT) != value:
+        errors.append(f"{label} must use YYYY-MM-DDTHH:MM:SS format")
+        return None
     return parsed
 
 
@@ -137,7 +119,7 @@ def validate_tasks(tasks: Any) -> None:
         _validate_positive_integer(
             task.get("duration_minutes"), f"{label} duration_minutes", errors
         )
-        _validate_datetime(task, "deadline", f"{label} deadline", errors)
+        _validate_datetime(task.get("deadline"), f"{label} deadline", errors)
         _validate_rating(task.get("priority"), f"{label} priority", errors)
         _validate_rating(task.get("difficulty"), f"{label} difficulty", errors)
 
@@ -174,8 +156,8 @@ def validate_tasks(tasks: Any) -> None:
         elif fixed_start is None or fixed_end is None:
             errors.append(f"{label} fixed_start and fixed_end must both be provided")
         else:
-            start = _validate_datetime(task, "fixed_start", f"{label} fixed_start", errors)
-            end = _validate_datetime(task, "fixed_end", f"{label} fixed_end", errors)
+            start = _validate_datetime(fixed_start, f"{label} fixed_start", errors)
+            end = _validate_datetime(fixed_end, f"{label} fixed_end", errors)
             if start is not None and end is not None and start >= end:
                 errors.append(f"{label} fixed_end must be after fixed_start")
 
@@ -202,8 +184,8 @@ def validate_availability(availability: Any) -> None:
             errors.append(f"{label} must be an object")
             continue
         errors.extend(_require_fields(interval, {"start", "end"}, label))
-        start = _validate_datetime(interval, "start", f"{label} start", errors)
-        end = _validate_datetime(interval, "end", f"{label} end", errors)
+        start = _validate_datetime(interval.get("start"), f"{label} start", errors)
+        end = _validate_datetime(interval.get("end"), f"{label} end", errors)
         if start is not None and end is not None and start >= end:
             errors.append(f"{label} end must be after start")
 
@@ -229,8 +211,8 @@ def validate_fixed_events(fixed_events: Any) -> None:
                 errors.append(f"{label} has duplicate id {event_id}")
             event_ids.add(event_id)
         _validate_name(event.get("name"), f"{label} name", errors)
-        start = _validate_datetime(event, "start", f"{label} start", errors)
-        end = _validate_datetime(event, "end", f"{label} end", errors)
+        start = _validate_datetime(event.get("start"), f"{label} start", errors)
+        end = _validate_datetime(event.get("end"), f"{label} end", errors)
         if start is not None and end is not None and start >= end:
             errors.append(f"{label} end must be after start")
 
@@ -291,10 +273,10 @@ def validate_schedule_output(schedule_output: Any) -> None:
             )
             _validate_positive_integer(task.get("task_id"), f"{label} task_id", errors)
             _validate_name(task.get("task_name"), f"{label} task_name", errors)
-            start = _validate_datetime(task, "start", f"{label} start", errors)
-            end = _validate_datetime(task, "end", f"{label} end", errors)
+            start = _validate_datetime(task.get("start"), f"{label} start", errors)
+            end = _validate_datetime(task.get("end"), f"{label} end", errors)
             _validate_rating(task.get("priority"), f"{label} priority", errors)
-            _validate_datetime(task, "deadline", f"{label} deadline", errors)
+            _validate_datetime(task.get("deadline"), f"{label} deadline", errors)
             if start is not None and end is not None and start >= end:
                 errors.append(f"{label} end must be after start")
 

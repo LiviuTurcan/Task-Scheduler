@@ -1,1 +1,69 @@
-[]
+[
+  {
+    "id": 1,
+    "name": "Study algorithms",
+    "duration_minutes": 120,
+    "deadline": "2026-06-01T18:00:00",
+    "priority": 5,
+    "difficulty": 4,
+    "dependencies": [],
+    "can_split": true,
+    "fixed": false,
+    "fixed_start": null,
+    "fixed_end": null
+  },
+  {
+    "id": 2,
+    "name": "Write essay",
+    "duration_minutes": 180,
+    "deadline": "2026-06-02T20:00:00",
+    "priority": 4,
+    "difficulty": 3,
+    "dependencies": [],
+    "can_split": false,
+    "fixed": false,
+    "fixed_start": null,
+    "fixed_end": null
+  },
+  {
+    "id": 3,
+    "name": "Gym session",
+    "duration_minutes": 90,
+    "deadline": "2026-06-01T21:00:00",
+    "priority": 3,
+    "difficulty": 2,
+    "dependencies": [],
+    "can_split": false,
+    "fixed": false,
+    "fixed_start": null,
+    "fixed_end": null
+  },
+  {
+    "id": 4,
+    "name": "Project report",
+    "duration_minutes": 240,
+    "deadline": "2026-06-03T17:00:00",
+    "priority": 5,
+    "difficulty": 5,
+    "dependencies": [
+      2
+    ],
+    "can_split": true,
+    "fixed": false,
+    "fixed_start": null,
+    "fixed_end": null
+  },
+  {
+    "id": 5,
+    "name": "Review lecture notes",
+    "duration_minutes": 60,
+    "deadline": "2026-06-01T16:30:00",
+    "priority": 2,
+    "difficulty": 1,
+    "dependencies": [],
+    "can_split": true,
+    "fixed": false,
+    "fixed_start": null,
+    "fixed_end": null
+  }
+]
