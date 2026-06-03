@@ -1373,10 +1373,10 @@ input:checked + .hud-toggle-slider:before {
 }
 
 #pane-json.fullscreen-book .book-container-box {
-  width: 1200px !important;
-  max-width: 90vw !important;
-  height: 800px !important;
-  max-height: 85vh !important;
+  width: 960px !important;
+  max-width: 80vw !important;
+  height: 580px !important;
+  max-height: 70vh !important;
   background: rgba(12, 6, 26, 0.96) !important;
   border: 1px solid rgba(139, 92, 246, 0.45) !important;
   border-radius: 20px;
@@ -1435,27 +1435,27 @@ input:checked + .hud-toggle-slider:before {
 }
 
 #pane-json.fullscreen-book .code-terminal {
-  font-size: 12.5px !important;
-  line-height: 1.6 !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
 }
 
 #pane-json.fullscreen-book #dev-textarea-tasks {
-  height: 250px !important;
+  height: 150px !important;
 }
 
 #pane-json.fullscreen-book #dev-textarea-availability {
-  height: 150px !important;
+  height: 90px !important;
 }
 
 #pane-json.fullscreen-book #dev-textarea-fixed {
-  height: 150px !important;
+  height: 90px !important;
 }
 
 #pane-json.fullscreen-book #dev-textarea-output {
   flex: 1 !important;
-  min-height: 250px !important;
+  min-height: 150px !important;
 }
 
 #pane-json.fullscreen-book #dev-optimization-diff-log {
-  height: 200px !important;
+  height: 120px !important;
 }
