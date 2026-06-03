@@ -1033,10 +1033,19 @@ input:checked + .hud-toggle-slider:before {
 }
 
 .term-dot {
-  width: 9px;
-  height: 9px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   display: inline-block;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+  opacity: 0.85;
+}
+
+.term-dot:hover {
+  transform: scale(1.2);
+  filter: brightness(1.2);
+  opacity: 1;
 }
 
 .term-dot.close { background-color: var(--neon-rose); }
