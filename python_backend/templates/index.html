@@ -165,7 +165,14 @@
         <div id="pane-json" class="dock-pane">
           <div class="book-container-box">
             <div class="dock-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
-              <h3>Developer Console</h3>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="terminal-controls" style="margin-right: 4px; display: flex; gap: 6px;">
+                  <span class="term-dot close" title="Close Developer Window" onclick="toggleDeveloperConsoleFullscreen()"></span>
+                  <span class="term-dot minimize" title="Minimize Developer Window" onclick="toggleDeveloperConsoleFullscreen()"></span>
+                  <span class="term-dot maximize" title="Maximize Developer Window" onclick="toggleDeveloperConsoleFullscreen()"></span>
+                </div>
+                <h3>Developer Console</h3>
+              </div>
               <button onclick="toggleDeveloperConsoleFullscreen()" class="btn-action-outline" style="padding: 6px; border-radius: 8px; border-color: rgba(255,255,255,0.1); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="Toggle Fullscreen (Book Mode)">
                 <i data-lucide="book-open" style="width: 16px; height: 16px; color: var(--neon-cyan);"></i>
               </button>
@@ -450,6 +457,28 @@
             <input type="checkbox" id="form-task-split" checked>
             <span class="hud-toggle-slider"></span>
           </label>
+        </div>
+
+        <div class="hud-switch-container">
+          <div class="hud-switch-meta">
+            <span class="hud-switch-title">Manual Schedule (Lock Slot)</span>
+            <span class="hud-switch-desc">Pin this task to a specific date & time.</span>
+          </div>
+          <label class="hud-toggle">
+            <input type="checkbox" id="form-task-fixed-toggle" onchange="toggleFormTaskFixed(this.checked)">
+            <span class="hud-toggle-slider"></span>
+          </label>
+        </div>
+
+        <div id="form-task-fixed-time-inputs" style="display: none;" class="hud-grid-row-2">
+          <div class="hud-field-group">
+            <label>Locked Start Datetime</label>
+            <input type="datetime-local" id="form-task-fixed-start" class="hud-input" />
+          </div>
+          <div class="hud-field-group">
+            <label>Locked End Datetime</label>
+            <input type="datetime-local" id="form-task-fixed-end" class="hud-input" />
+          </div>
         </div>
 
         <!-- checklist checklists manager section (PHASE 9) -->

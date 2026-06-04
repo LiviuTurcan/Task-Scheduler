@@ -12,6 +12,13 @@ function dismissModal(id) {
   if (modal) modal.classList.remove('active');
 }
 
+function toggleFormTaskFixed(checked) {
+  const inputs = document.getElementById('form-task-fixed-time-inputs');
+  if (inputs) {
+    inputs.style.display = checked ? 'grid' : 'none';
+  }
+}
+
 // 1. Tasks Popups CRUD
 function launchAddTaskModal() {
   document.getElementById('form-task-index').value = '';
@@ -23,6 +30,14 @@ function launchAddTaskModal() {
   document.getElementById('form-task-priority').value = '3';
   document.getElementById('form-task-difficulty').value = '3';
   document.getElementById('form-task-split').checked = true;
+
+  const fixedToggle = document.getElementById('form-task-fixed-toggle');
+  if (fixedToggle) {
+    fixedToggle.checked = false;
+    toggleFormTaskFixed(false);
+  }
+  document.getElementById('form-task-fixed-start').value = '';
+  document.getElementById('form-task-fixed-end').value = '';
 
   // Clear subtasks checklists UI viewport
   document.getElementById('form-task-subtasks-viewport').innerHTML = '';
@@ -47,6 +62,23 @@ function launchEditTaskModal(index) {
   document.getElementById('form-task-priority').value = task.priority;
   document.getElementById('form-task-difficulty').value = task.difficulty;
   document.getElementById('form-task-split').checked = task.can_split;
+
+  const fixedToggle = document.getElementById('form-task-fixed-toggle');
+  if (fixedToggle) {
+    fixedToggle.checked = !!task.fixed;
+    toggleFormTaskFixed(!!task.fixed);
+  }
+  if (task.fixed && task.fixed_start && task.fixed_end) {
+    let fStart = task.fixed_start;
+    if (fStart.length > 16) fStart = fStart.substring(0, 16);
+    let fEnd = task.fixed_end;
+    if (fEnd.length > 16) fEnd = fEnd.substring(0, 16);
+    document.getElementById('form-task-fixed-start').value = fStart;
+    document.getElementById('form-task-fixed-end').value = fEnd;
+  } else {
+    document.getElementById('form-task-fixed-start').value = '';
+    document.getElementById('form-task-fixed-end').value = '';
+  }
 
   // Populate subtasks checklists UI viewport (PHASE 9)
   const subtasksContainer = document.getElementById('form-task-subtasks-viewport');
@@ -123,6 +155,24 @@ async function commitTaskForm(e) {
   const difficulty = parseInt(document.getElementById('form-task-difficulty').value);
   const canSplit = document.getElementById('form-task-split').checked;
 
+  const isFixed = document.getElementById('form-task-fixed-toggle') ? document.getElementById('form-task-fixed-toggle').checked : false;
+  let fixedStart = null;
+  let fixedEnd = null;
+  if (isFixed) {
+    fixedStart = document.getElementById('form-task-fixed-start').value;
+    fixedEnd = document.getElementById('form-task-fixed-end').value;
+    if (!fixedStart || !fixedEnd) {
+      showSpringToast("Please provide both start and end datetimes for manual scheduling!", "error");
+      return;
+    }
+    if (fixedStart.length === 16) fixedStart += ":00";
+    if (fixedEnd.length === 16) fixedEnd += ":00";
+    if (new Date(fixedStart) >= new Date(fixedEnd)) {
+      showSpringToast("Locked End Datetime must be after Locked Start Datetime!", "error");
+      return;
+    }
+  }
+
   const checkedDeps = Array.from(document.querySelectorAll('input[name="task-dependency-item-box"]:checked'))
                            .map(input => parseInt(input.value));
 
@@ -148,9 +198,9 @@ async function commitTaskForm(e) {
       difficulty: difficulty,
       dependencies: checkedDeps,
       can_split: canSplit,
-      fixed: false,
-      fixed_start: null,
-      fixed_end: null,
+      fixed: isFixed,
+      fixed_start: fixedStart,
+      fixed_end: fixedEnd,
       subtasks: subtasksList // Save subtasks array (PHASE 9)
     };
     tasks.push(newTask);
@@ -164,6 +214,9 @@ async function commitTaskForm(e) {
     tasks[idx].difficulty = difficulty;
     tasks[idx].dependencies = checkedDeps;
     tasks[idx].can_split = canSplit;
+    tasks[idx].fixed = isFixed;
+    tasks[idx].fixed_start = fixedStart;
+    tasks[idx].fixed_end = fixedEnd;
     tasks[idx].subtasks = subtasksList; // Save subtasks array (PHASE 9)
     showSpringToast('Updated task adjustments.');
   }

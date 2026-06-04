@@ -254,6 +254,87 @@ function renderTimelineView() {
     });
   }
 
+  // 2.7 Draw Manually Scheduled (Fixed) Tasks directly from tasks array
+  tasks.forEach(task => {
+    if (task.fixed && task.fixed_start && task.fixed_end) {
+      const start = new Date(task.fixed_start);
+      const end = new Date(task.fixed_end);
+
+      if (start < endDay && end > startDay) {
+        const matchStart = new Date(Math.max(start, startDay));
+        const matchEnd = new Date(Math.min(end, endDay));
+
+        const startHr = matchStart.getHours() + matchStart.getMinutes() / 60;
+        const duration = (matchEnd - matchStart) / (1000 * 60 * 60);
+
+        const topPx = startHr * 60;
+        const heightPx = duration * 60;
+
+        const isInsideAvail = availability.some(avail => {
+          const availStart = new Date(avail.start);
+          const availEnd = new Date(avail.end);
+          return (availStart <= start && end <= availEnd);
+        });
+
+        const block = document.createElement('div');
+        block.className = `timeline-block block-type-task ${isInsideAvail ? '' : 'outside-availability-warning'}`;
+        if (heightPx < 45) {
+          block.classList.add('short-block');
+        }
+        block.style.top = topPx + 'px';
+        block.style.height = heightPx + 'px';
+        
+        block.innerHTML = `
+          <div class="block-header-box">
+            <span class="block-headline"><i data-lucide="lock" style="width:11px; display:inline-block; vertical-align:middle; margin-right:2px; color:var(--neon-orange);"></i> ${escapeHtml(task.name)}</span>
+            <span class="block-hours-tag">${formatTimeClock(start)} - ${formatTimeClock(end)}</span>
+          </div>
+          <div class="block-footer-box">
+            <span class="block-pills-row">
+              <span class="block-split-badge" style="background:rgba(249,115,22,0.18); border:1px solid rgba(249,115,22,0.35); color:var(--neon-orange);">Locked</span>
+              ${isInsideAvail ? '' : '<span class="block-split-badge" style="background:rgba(244,63,94,0.18); border:1px solid rgba(244,63,94,0.35); color:var(--neon-rose);">Outside Availability</span>'}
+            </span>
+          </div>
+          <div class="block-resize-handle"></div>
+        `;
+
+        // Tooltip triggers
+        block.addEventListener('mousemove', (e) => {
+          if (!block.classList.contains('dragging-active') && !block.classList.contains('resizing-active')) {
+            triggerHoverTooltip(e, {
+              name: task.name,
+              type: 'Locked Manual Allocation',
+              start: task.fixed_start,
+              end: task.fixed_end,
+              deadline: task.deadline,
+              priority: task.priority,
+              duration: task.duration_minutes
+            });
+          }
+        });
+        block.addEventListener('mouseleave', dismissHoverTooltip);
+
+        // Make draggable & resizable
+        makeTimelineBlockDraggable(block, { task_id: task.id }, task.duration_minutes);
+        const handle = block.querySelector('.block-resize-handle');
+        if (handle) {
+          makeTimelineBlockResizable(block, handle, { task_id: task.id });
+        }
+
+        schedWrapper.appendChild(block);
+
+        chronologicalAgenda.push({
+          name: task.name,
+          type: 'task',
+          start: start,
+          end: end,
+          priority: task.priority,
+          splitLabel: 'Locked'
+        });
+      }
+    }
+  });
+
   // 3. Draw Scheduled Optimized Task blocks (Equipped with custom drag-and-drop!)
   if (scheduleOutput && scheduleOutput.schedule) {
     const taskTotalSplits = {};
@@ -264,6 +345,10 @@ function renderTimelineView() {
     const taskCurrentSegmentIndex = {};
 
     scheduleOutput.schedule.forEach(seg => {
+      // Skip if task is manually locked (already drawn from tasks array above)
+      const targetTask = tasks.find(t => String(t.id) === String(seg.task_id));
+      if (targetTask && targetTask.fixed) return;
+
       const start = new Date(seg.start);
       const end = new Date(seg.end);
 
@@ -282,9 +367,21 @@ function renderTimelineView() {
         const totalSplits = taskTotalSplits[seg.task_id] || 1;
         const currentIdx = taskCurrentSegmentIndex[seg.task_id] || 1;
 
+        const isInsideAvail = availability.some(avail => {
+          const availStart = new Date(avail.start);
+          const availEnd = new Date(avail.end);
+          return (availStart <= start && end <= availEnd);
+        });
+
         const block = document.createElement('div');
         const isEnded = new Date(seg.end) < new Date();
-        block.className = `timeline-block ${isEnded ? 'block-type-ended' : 'block-type-task'}`;
+        
+        let blockTypeClass = isEnded ? 'block-type-ended' : 'block-type-task';
+        if (!isInsideAvail) {
+          blockTypeClass += ' outside-availability-warning';
+        }
+        
+        block.className = `timeline-block ${blockTypeClass}`;
         if (heightPx < 45) {
           block.classList.add('short-block');
         }
@@ -300,6 +397,7 @@ function renderTimelineView() {
             <span class="block-pills-row">
               ${totalSplits > 1 ? `<span class="block-split-badge">Segment ${currentIdx}/${totalSplits}</span>` : ''}
               ${isEnded ? '<span class="block-split-badge" style="background:rgba(244,63,94,0.18); border:1px solid rgba(244,63,94,0.35); color:var(--neon-rose); text-transform:uppercase;">Ended</span>' : `<span style="font-size:9.5px; font-weight:700; color:var(--text-secondary);">Prio: ${seg.priority}</span>`}
+              ${isInsideAvail ? '' : '<span class="block-split-badge" style="background:rgba(244,63,94,0.18); border:1px solid rgba(244,63,94,0.35); color:var(--neon-rose);">Outside Availability</span>'}
             </span>
           </div>
           ${isEnded ? '' : '<div class="block-resize-handle"></div>'}
@@ -468,11 +566,27 @@ function makeTimelineBlockDraggable(element, segment, durationMinutes) {
     // Find task in local memory, convert it to FIXED at this custom time so backend respects it!
     const taskIdx = tasks.findIndex(t => String(t.id) === String(segment.task_id));
     if (taskIdx !== -1) {
+      if (typeof saveBackupCurrentDatabaseState === 'function') {
+        saveBackupCurrentDatabaseState();
+      }
       tasks[taskIdx].fixed = true;
       tasks[taskIdx].fixed_start = newStartISO;
       tasks[taskIdx].fixed_end = newEndISO;
       tasks[taskIdx].duration_minutes = durationMinutes; // Unify duration into 1 task block
       
+      // Immediately synchronize scheduleOutput segment to prevent visual jumping & mismatch
+      if (scheduleOutput && scheduleOutput.schedule) {
+        scheduleOutput.schedule = scheduleOutput.schedule.filter(s => String(s.task_id) !== String(segment.task_id));
+        scheduleOutput.schedule.push({
+          task_id: tasks[taskIdx].id,
+          task_name: tasks[taskIdx].name,
+          start: newStartISO,
+          end: newEndISO,
+          priority: tasks[taskIdx].priority,
+          deadline: tasks[taskIdx].deadline
+        });
+      }
+
       showSpringToast(`Rescheduled "${tasks[taskIdx].name}" manually. Solver locking slot.`);
       
       // Update UI cards and Dev JSON accordion
@@ -575,11 +689,27 @@ function makeTimelineBlockResizable(element, handle, segment) {
     
     const taskIdx = tasks.findIndex(t => String(t.id) === String(segment.task_id));
     if (taskIdx !== -1) {
+      if (typeof saveBackupCurrentDatabaseState === 'function') {
+        saveBackupCurrentDatabaseState();
+      }
       tasks[taskIdx].fixed = true;
       tasks[taskIdx].fixed_start = newStartISO;
       tasks[taskIdx].fixed_end = newEndISO;
       tasks[taskIdx].duration_minutes = newDurationMin; // Change duration to 1 task
       
+      // Immediately synchronize scheduleOutput segment to prevent visual jumping & mismatch
+      if (scheduleOutput && scheduleOutput.schedule) {
+        scheduleOutput.schedule = scheduleOutput.schedule.filter(s => String(s.task_id) !== String(segment.task_id));
+        scheduleOutput.schedule.push({
+          task_id: tasks[taskIdx].id,
+          task_name: tasks[taskIdx].name,
+          start: newStartISO,
+          end: newEndISO,
+          priority: tasks[taskIdx].priority,
+          deadline: tasks[taskIdx].deadline
+        });
+      }
+
       showSpringToast(`Resized "${tasks[taskIdx].name}" duration to ${newDurationMin}m.`);
       
       syncStateToVisualDocks();
@@ -594,6 +724,7 @@ function makeTimelineBlockResizable(element, handle, segment) {
       renderTimelineView();
     }
   }
+}
 
 // Generate dots counter under day labels
 function updateWeekDensityDotCounters() {

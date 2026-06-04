@@ -12,6 +12,7 @@ let endedTasks = JSON.parse(localStorage.getItem('chrono_ended_tasks_archive')) 
 // Presentation & Auto-Solve States
 let isAutoSolve = true;
 let isScheduleOutOfSync = false;
+let lastSolverError = null;
 
 function serializeTaskToVirtualEventName(task) {
   const depsStr = (task.dependencies || []).join(',');
@@ -74,8 +75,10 @@ function buildOptimizationPayload() {
     if (e.id > maxFixedEventId) maxFixedEventId = e.id;
   });
   
+  const virtualizedTaskIds = new Set();
   tasks.forEach(task => {
     if (task.fixed && task.fixed_start && task.fixed_end) {
+      virtualizedTaskIds.add(task.id);
       const virtualId = maxFixedEventId + 1 + task.id;
       payloadFixedEvents.push({
         id: virtualId,
@@ -83,8 +86,17 @@ function buildOptimizationPayload() {
         start: task.fixed_start,
         end: task.fixed_end
       });
-    } else {
-      payloadTasks.push(task);
+    }
+  });
+
+  tasks.forEach(task => {
+    if (!(task.fixed && task.fixed_start && task.fixed_end)) {
+      // Deep copy to prevent mutating the state variable's actual dependencies list
+      const taskCopy = JSON.parse(JSON.stringify(task));
+      if (taskCopy.dependencies) {
+        taskCopy.dependencies = taskCopy.dependencies.filter(depId => !virtualizedTaskIds.has(depId));
+      }
+      payloadTasks.push(taskCopy);
     }
   });
 
@@ -205,18 +217,83 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // 3. Automatically run scheduler optimization on landing page load (silently)
   await triggerSchedulerOptimization(true);
+
+  // 4. Attach HTML5 Drag-and-Drop listener to the calendar canvas
+  const canvas = document.getElementById('chrono-timeline-canvas');
+  if (canvas) {
+    canvas.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+    
+    canvas.addEventListener('dragenter', (e) => {
+      canvas.classList.add('drag-hover');
+    });
+    
+    canvas.addEventListener('dragleave', (e) => {
+      canvas.classList.remove('drag-hover');
+    });
+    
+    canvas.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      canvas.classList.remove('drag-hover');
+      
+      const taskIdStr = e.dataTransfer.getData('text/plain');
+      const taskId = parseInt(taskIdStr);
+      if (isNaN(taskId)) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      let clickY = e.clientY - rect.top;
+      
+      // Snap to 15-minute grid (15px)
+      clickY = Math.round(clickY / 15) * 15;
+      clickY = Math.max(0, Math.min(clickY, 1440 - 15));
+      
+      const startHour = Math.floor(clickY / 60);
+      const startMins = clickY % 60;
+      
+      const taskObj = tasks.find(t => t.id === taskId);
+      if (!taskObj) return;
+      
+      const duration = taskObj.duration_minutes || 60;
+      const endTotal = clickY + duration;
+      const endHour = Math.floor(endTotal / 60);
+      const endMins = endTotal % 60;
+      
+      const newStartISO = `${activeDayDateString}T${String(startHour).padStart(2, '0')}:${String(startMins).padStart(2, '0')}:00`;
+      const newEndISO = `${activeDayDateString}T${String(endHour).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
+      
+      if (typeof saveBackupCurrentDatabaseState === 'function') {
+        saveBackupCurrentDatabaseState();
+      }
+      taskObj.fixed = true;
+      taskObj.fixed_start = newStartISO;
+      taskObj.fixed_end = newEndISO;
+      
+      showSpringToast(`Scheduled "${taskObj.name}" on ${activeDayDateString} at ${String(startHour).padStart(2, '0')}:${String(startMins).padStart(2, '0')}.`);
+      
+      syncStateToVisualDocks();
+      if (isAutoSolve) {
+        await triggerSchedulerOptimization(true);
+      } else {
+        markScheduleOutOfSync();
+      }
+    });
+  }
 });
 
 // Backup DB variables for the Unsync/Revert feature
 let backupTasks = [];
 let backupAvailability = [];
 let backupFixedEvents = [];
+let backupScheduleOutput = null;
 
 // Save copies of data variables to allow undoing edits
 function saveBackupCurrentDatabaseState() {
   backupTasks = JSON.parse(JSON.stringify(tasks));
   backupAvailability = JSON.parse(JSON.stringify(availability));
   backupFixedEvents = JSON.parse(JSON.stringify(fixedEvents));
+  backupScheduleOutput = scheduleOutput ? JSON.parse(JSON.stringify(scheduleOutput)) : null;
 }
 
 // Flag to block backup saving during active revert sequences
@@ -234,6 +311,7 @@ async function revertUnsyncDeveloperEdits() {
   tasks = JSON.parse(JSON.stringify(backupTasks));
   availability = JSON.parse(JSON.stringify(backupAvailability));
   fixedEvents = JSON.parse(JSON.stringify(backupFixedEvents));
+  scheduleOutput = backupScheduleOutput ? JSON.parse(JSON.stringify(backupScheduleOutput)) : null;
   
   syncStateToVisualDocks();
   showSpringToast('Restored previous database state. Unsynced changes.');
@@ -368,6 +446,7 @@ async function triggerSchedulerOptimization(silent = false) {
     
     if (data.success) {
       scheduleOutput = data.schedule;
+      lastSolverError = null;
       
       // Append manually scheduled (fixed) tasks back into the output schedule
       tasks.forEach(task => {
@@ -461,14 +540,42 @@ async function triggerSchedulerOptimization(silent = false) {
         }
       }
       
+      // Update sidebar visual docks (to show newly scheduled / fixed times)
+      syncStateToVisualDocks();
+      
       // Update charts & timeline chrono grids
       renderMainMetricsDashboard();
     } else {
       showSpringToast('Engine failure: ' + data.error, 'error');
+      lastSolverError = data.error;
+      syncStateToVisualDocks();
+      if (backupTasks && backupTasks.length > 0) {
+        tasks = JSON.parse(JSON.stringify(backupTasks));
+        availability = JSON.parse(JSON.stringify(backupAvailability));
+        fixedEvents = JSON.parse(JSON.stringify(backupFixedEvents));
+        scheduleOutput = backupScheduleOutput ? JSON.parse(JSON.stringify(backupScheduleOutput)) : null;
+        syncStateToVisualDocks();
+        if (typeof renderTimelineView === 'function') {
+          renderTimelineView();
+        }
+        showSpringToast('Reverted manual allocation due to engine failure.', 'warning');
+      }
     }
   } catch (err) {
     console.error(err);
     showSpringToast('Network connection lost. C++ backend unreachable.', 'error');
+    lastSolverError = err.message;
+    syncStateToVisualDocks();
+    if (backupTasks && backupTasks.length > 0) {
+      tasks = JSON.parse(JSON.stringify(backupTasks));
+      availability = JSON.parse(JSON.stringify(backupAvailability));
+      fixedEvents = JSON.parse(JSON.stringify(backupFixedEvents));
+      scheduleOutput = backupScheduleOutput ? JSON.parse(JSON.stringify(backupScheduleOutput)) : null;
+      syncStateToVisualDocks();
+      if (typeof renderTimelineView === 'function') {
+        renderTimelineView();
+      }
+    }
   } finally {
     btn.disabled = false;
     btn.style.opacity = '1';
@@ -533,6 +640,11 @@ function syncStateToVisualDocks() {
     tasks.forEach((task, idx) => {
       const card = document.createElement('div');
       card.className = 'card-item';
+      card.setAttribute('draggable', 'true');
+      card.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', String(task.id));
+        e.dataTransfer.effectAllowed = 'move';
+      });
       
       const depsNames = task.dependencies.map(id => {
         const tObj = tasks.find(t => t.id === id);
@@ -598,6 +710,68 @@ function syncStateToVisualDocks() {
         <div style="font-size:10px; color:var(--text-muted); display:flex; align-items:center; gap:5px; margin-top:4px;">
           <i data-lucide="calendar" style="width:11px;"></i> Due: ${formatDateLabel(task.deadline)}
         </div>
+        ${(() => {
+          if (task.fixed && task.fixed_start && task.fixed_end) {
+            const start = new Date(task.fixed_start);
+            const end = new Date(task.fixed_end);
+            const isInside = availability.some(avail => {
+              const availStart = new Date(avail.start);
+              const availEnd = new Date(avail.end);
+              return (availStart <= start && end <= availEnd);
+            });
+            return `
+              <div style="font-size:10px; color:${isInside ? 'var(--neon-orange)' : 'var(--neon-rose)'}; display:flex; align-items:flex-start; gap:5px; margin-top:4px; font-weight:700;">
+                <i data-lucide="${isInside ? 'lock' : 'alert-triangle'}" style="width:11px; color:${isInside ? 'var(--neon-orange)' : 'var(--neon-rose)'}; margin-top:2px;"></i>
+                <div>
+                  <span>Locked Allocation${isInside ? '' : ' (Outside Avail)'}:</span><br>
+                  <span style="color:#fff; font-weight:500; ${isInside ? '' : 'text-decoration: underline wavy var(--neon-rose);'}">${formatDateLabel(task.fixed_start)} - ${formatTimeClock(new Date(task.fixed_end))}</span>
+                </div>
+              </div>
+            `;
+          } else if (scheduleOutput && scheduleOutput.schedule) {
+            const segments = scheduleOutput.schedule.filter(seg => String(seg.task_id) === String(task.id));
+            if (segments.length > 0) {
+              segments.sort((a, b) => new Date(a.start) - new Date(b.start));
+              const timeRanges = segments.map(seg => {
+                const segStart = new Date(seg.start);
+                const segEnd = new Date(seg.end);
+                const isSegInside = availability.some(avail => {
+                  const availStart = new Date(avail.start);
+                  const availEnd = new Date(avail.end);
+                  return (availStart <= segStart && segEnd <= availEnd);
+                });
+                return `<span style="color:#fff; font-weight:500; ${isSegInside ? '' : 'text-decoration: underline wavy var(--neon-rose);'}">${formatDateLabel(seg.start)} - ${formatTimeClock(new Date(seg.end))} ${isSegInside ? '' : '(Outside Avail)'}</span>`;
+              }).join('<br>');
+              
+              const allInside = segments.every(seg => {
+                const segStart = new Date(seg.start);
+                const segEnd = new Date(seg.end);
+                return availability.some(avail => {
+                  const availStart = new Date(avail.start);
+                  const availEnd = new Date(avail.end);
+                  return (availStart <= segStart && segEnd <= availEnd);
+                });
+              });
+
+              return `
+                <div style="font-size:10px; color:${allInside ? 'var(--neon-emerald)' : 'var(--neon-rose)'}; display:flex; align-items:flex-start; gap:5px; margin-top:4px; font-weight:700;">
+                  <i data-lucide="${allInside ? 'calendar' : 'alert-triangle'}" style="width:11px; color:${allInside ? 'var(--neon-emerald)' : 'var(--neon-rose)'}; margin-top:2px;"></i>
+                  <div>
+                    <span>Optimized Allocation:</span><br>
+                    ${timeRanges}
+                  </div>
+                </div>
+              `;
+            } else {
+              return `
+                <div style="font-size:10px; color:var(--neon-rose); display:flex; align-items:center; gap:5px; margin-top:4px; font-weight:700;">
+                  <i data-lucide="alert-circle" style="width:11px; color:var(--neon-rose);"></i> Unscheduled (No fit)
+                </div>
+              `;
+            }
+          }
+          return '';
+        })()}
       `;
       tViewport.appendChild(card);
     });
@@ -714,6 +888,102 @@ function syncStateToVisualDocks() {
   const outArea = document.getElementById('dev-textarea-output');
   if (outArea) {
     outArea.value = scheduleOutput ? JSON.stringify(scheduleOutput, null, 2) : '';
+  }
+
+  // 3.8. Render Troubleshooter Warning Hub
+  const troublePanel = document.getElementById('danger-alert-dock');
+  if (troublePanel) {
+    const unscheduledArray = (scheduleOutput && scheduleOutput.unscheduled_tasks) ? scheduleOutput.unscheduled_tasks : [];
+    
+    // Calculate availability conflicts
+    const availabilityConflicts = [];
+    tasks.forEach(task => {
+      if (task.fixed && task.fixed_start && task.fixed_end) {
+        const start = new Date(task.fixed_start);
+        const end = new Date(task.fixed_end);
+        const isInside = availability.some(avail => {
+          const availStart = new Date(avail.start);
+          const availEnd = new Date(avail.end);
+          return (availStart <= start && end <= availEnd);
+        });
+        if (!isInside) {
+          availabilityConflicts.push({
+            task_id: task.id,
+            task_name: task.name,
+            reason: `Locked slot (${formatDateLabel(task.fixed_start)} - ${formatTimeClock(new Date(task.fixed_end))}) falls outside available working hours.`
+          });
+        }
+      }
+    });
+
+    if (scheduleOutput && scheduleOutput.schedule) {
+      scheduleOutput.schedule.forEach(seg => {
+        const task = tasks.find(t => t.id === seg.task_id);
+        if (task && task.fixed) return;
+        const start = new Date(seg.start);
+        const end = new Date(seg.end);
+        const isInside = availability.some(avail => {
+          const availStart = new Date(avail.start);
+          const availEnd = new Date(avail.end);
+          return (availStart <= start && end <= availEnd);
+        });
+        if (!isInside) {
+          availabilityConflicts.push({
+            task_id: seg.task_id,
+            task_name: seg.task_name,
+            reason: `Scheduled slot (${formatDateLabel(seg.start)} - ${formatTimeClock(new Date(seg.end))}) falls outside available working hours.`
+          });
+        }
+      });
+    }
+
+    const totalAlerts = unscheduledArray.length + availabilityConflicts.length + (lastSolverError ? 1 : 0);
+
+    if (totalAlerts > 0) {
+      troublePanel.style.display = 'flex';
+      troublePanel.innerHTML = `
+        <div class="danger-title" style="display:flex; align-items:center; gap:8px;">
+          <i data-lucide="alert-triangle" style="color:var(--neon-rose);"></i> System Optimization & Conflict Alerts (${totalAlerts} issues detected)
+        </div>
+        <div style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
+          Issues detected with task scheduling. Drag tasks into green available slots, enlarge available windows, or extend deadlines.
+        </div>
+        <div class="danger-items-grid">
+          ${lastSolverError ? `
+            <div class="danger-item-card" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 8px; border-left: 4px solid var(--neon-rose); grid-column: span 2;">
+              <div>
+                <strong style="color: var(--neon-rose);">C++ Optimization Engine Failure</strong>
+                <span style="color:#fda4af; display: block; font-size: 11.5px; margin-top: 4px; font-family: 'JetBrains Mono', monospace;"><i data-lucide="alert-circle" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Error: ${escapeHtml(lastSolverError)}</span>
+              </div>
+            </div>
+          ` : ''}
+          ${unscheduledArray.map(item => `
+            <div class="danger-item-card" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 8px; border-left: 4px solid var(--neon-rose);">
+              <div>
+                <strong>${escapeHtml(item.task_name)}</strong>
+                <span style="color:#fda4af; display: block; font-size: 11.5px; margin-top: 4px;"><i data-lucide="alert-circle" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Unscheduled: ${escapeHtml(item.reason)}</span>
+              </div>
+              <button class="btn-action-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--neon-cyan); color: var(--neon-cyan); align-self: flex-end; display: flex; align-items: center; gap: 4px; border-radius: 6px; box-shadow: none;" onclick="launchFixProblemModal(${item.task_id}, \`${escapeHtml(item.reason)}\`)" title="Resolve this conflict">
+                <i data-lucide="wrench" style="width: 12px; height: 12px;"></i> Fix Problem
+              </button>
+            </div>
+          `).join('')}
+          ${availabilityConflicts.map(item => `
+            <div class="danger-item-card" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 8px; border-left: 4px solid var(--neon-orange);">
+              <div>
+                <strong>${escapeHtml(item.task_name)}</strong>
+                <span style="color:#fdba74; display: block; font-size: 11.5px; margin-top: 4px;"><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Outside Availability: ${escapeHtml(item.reason)}</span>
+              </div>
+              <button class="btn-action-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--neon-cyan); color: var(--neon-cyan); align-self: flex-end; display: flex; align-items: center; gap: 4px; border-radius: 6px; box-shadow: none;" onclick="launchFixProblemModal(${item.task_id}, \`${escapeHtml(item.reason)}\`)" title="Resolve this conflict">
+                <i data-lucide="wrench" style="width: 12px; height: 12px;"></i> Fix Problem
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      troublePanel.style.display = 'none';
+    }
   }
 
   lucide.createIcons();

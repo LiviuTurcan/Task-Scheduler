@@ -136,37 +136,6 @@ function renderMainMetricsDashboard() {
 
   document.getElementById('stat-conflicts-val').textContent = conflicts + violations;
 
-  // Render Troubleshooter Warning Hub
-  const troublePanel = document.getElementById('danger-alert-dock');
-  const unscheduledArray = scheduleOutput.unscheduled_tasks || [];
-
-  if (unscheduledArray.length > 0) {
-    troublePanel.style.display = 'flex';
-    troublePanel.innerHTML = `
-      <div class="danger-title">
-        <i data-lucide="alert-triangle"></i> Optimization Alerts (${unscheduledArray.length} tasks unscheduled)
-      </div>
-      <div style="font-size:12.5px; color:var(--text-secondary); margin-bottom:4px;">
-        The engine could not assign a timeframe for these items. Consider enlarging available slots or extending deadlines.
-      </div>
-      <div class="danger-items-grid">
-        ${unscheduledArray.map(item => `
-          <div class="danger-item-card" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 8px;">
-            <div>
-              <strong>${escapeHtml(item.task_name)}</strong>
-              <span style="color:#fda4af; display: block; font-size: 11.5px; margin-top: 2px;">Reason: ${escapeHtml(item.reason)}</span>
-            </div>
-            <button class="btn-action-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--neon-cyan); color: var(--neon-cyan); align-self: flex-end; display: flex; align-items: center; gap: 4px; border-radius: 6px; box-shadow: none;" onclick="launchFixProblemModal(${item.task_id}, \`${escapeHtml(item.reason)}\`)" title="Resolve this conflict">
-              <i data-lucide="wrench" style="width: 12px; height: 12px;"></i> Fix Problem
-            </button>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  } else {
-    troublePanel.style.display = 'none';
-  }
-
   // Update Chart.js datasets
   recalculateChartsData();
 

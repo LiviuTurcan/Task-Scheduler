@@ -170,9 +170,27 @@
 
 .visual-blocks-col {
   position: relative;
+  height: 1440px;
   border-left: 1px solid rgba(255, 255, 255, 0.04);
   background-size: 100% 60px;
   background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  transition: var(--transition-all);
+}
+
+.visual-blocks-col.drag-hover {
+  background-color: rgba(var(--neon-accent-rgb), 0.08) !important;
+  border-left: 2px dashed var(--neon-accent) !important;
+  border-right: 2px dashed var(--neon-accent) !important;
+}
+
+#chrono-availabilities-wrapper,
+#chrono-schedule-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 /* Laser mock time tracker (Mon June 1st, 2026 at 17:18) */
@@ -235,6 +253,7 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   touch-action: none; /* Safari/Mac drag-and-drop gesture conflict fix */
+  pointer-events: auto;
 }
 
 .timeline-block:active {
@@ -427,4 +446,24 @@
 
 .timeline-block.short-block .block-footer-box {
   display: none !important; /* Hide segments and pill badges in very narrow tasks */
+}
+
+/* Pulsing warning border for out-of-availability allocations */
+.timeline-block.outside-availability-warning {
+  border: 1px dashed var(--neon-orange) !important;
+  border-left: 4px solid var(--neon-rose) !important;
+  background: rgba(244, 63, 94, 0.05) !important;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.25) !important;
+  animation: warningPulse 2.5s infinite alternate ease-in-out !important;
+}
+
+@keyframes warningPulse {
+  0% {
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.15), inset 0 0 10px rgba(244, 63, 94, 0.02);
+    border-color: rgba(249, 115, 22, 0.4) !important;
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.45), inset 0 0 15px rgba(244, 63, 94, 0.05);
+    border-color: rgba(244, 63, 94, 0.85) !important;
+  }
 }

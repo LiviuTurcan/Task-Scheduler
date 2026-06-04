@@ -1,69 +1,83 @@
 [
   {
-    "can_split": true,
-    "deadline": "2026-06-10T18:00:00",
-    "dependencies": [],
-    "difficulty": 4,
-    "duration_minutes": 120,
-    "fixed": false,
-    "fixed_end": null,
-    "fixed_start": null,
     "id": 1,
-    "name": "Study algorithms",
-    "priority": 5
-  },
-  {
-    "can_split": false,
-    "deadline": "2026-06-11T20:00:00",
-    "dependencies": [],
+    "name": "Prepare Presentation",
+    "duration_minutes": 120,
+    "deadline": "2026-06-10T18:00:00",
+    "priority": 4,
     "difficulty": 3,
-    "duration_minutes": 180,
+    "dependencies": [],
+    "can_split": true,
     "fixed": false,
-    "fixed_end": null,
     "fixed_start": null,
+    "fixed_end": null,
+    "subtasks": [
+      {
+        "name": "Create slides outline",
+        "completed": true
+      },
+      {
+        "name": "Add design details",
+        "completed": false
+      }
+    ]
+  },
+  {
     "id": 2,
-    "name": "Write essay",
-    "priority": 4
-  },
-  {
-    "can_split": false,
-    "deadline": "2026-06-10T21:00:00",
-    "dependencies": [],
-    "difficulty": 2,
-    "duration_minutes": 90,
-    "fixed": false,
-    "fixed_end": null,
-    "fixed_start": null,
-    "id": 3,
-    "name": "Gym session",
-    "priority": 3
-  },
-  {
-    "can_split": true,
+    "name": "Report Submission",
+    "duration_minutes": 180,
     "deadline": "2026-06-12T17:00:00",
-    "dependencies": [
-      2
-    ],
-    "difficulty": 5,
-    "duration_minutes": 240,
+    "priority": 5,
+    "difficulty": 4,
+    "dependencies": [],
+    "can_split": false,
     "fixed": false,
-    "fixed_end": null,
     "fixed_start": null,
-    "id": 4,
-    "name": "Project report",
-    "priority": 5
+    "fixed_end": null,
+    "subtasks": []
   },
   {
-    "can_split": true,
-    "deadline": "2026-06-10T16:30:00",
+    "id": 3,
+    "name": "Math Homework Assignment",
+    "duration_minutes": 90,
+    "deadline": "2026-06-14T20:00:00",
+    "priority": 3,
+    "difficulty": 2,
     "dependencies": [],
-    "difficulty": 1,
-    "duration_minutes": 60,
+    "can_split": true,
     "fixed": false,
-    "fixed_end": null,
     "fixed_start": null,
+    "fixed_end": null,
+    "subtasks": []
+  },
+  {
+    "id": 4,
+    "name": "Figma UI Prototyping",
+    "duration_minutes": 240,
+    "deadline": "2026-06-13T19:00:00",
+    "priority": 4,
+    "difficulty": 4,
+    "dependencies": [],
+    "can_split": true,
+    "fixed": false,
+    "fixed_start": null,
+    "fixed_end": null,
+    "subtasks": []
+  },
+  {
     "id": 5,
-    "name": "Review lecture notes",
-    "priority": 2
+    "name": "Code Review & Push",
+    "duration_minutes": 60,
+    "deadline": "2026-06-11T16:00:00",
+    "priority": 3,
+    "difficulty": 2,
+    "dependencies": [
+      1
+    ],
+    "can_split": false,
+    "fixed": false,
+    "fixed_start": null,
+    "fixed_end": null,
+    "subtasks": []
   }
 ]
