@@ -714,22 +714,63 @@
           </p>
         </div>
 
-        <!-- Disable 3D Background Toggle -->
-        <div class="hud-field-group">
-          <label style="margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--text-secondary);">
-            Performance Configuration
+        <!-- Performance & Optimization Configuration -->
+        <div class="hud-field-group" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 15px;">
+          <label style="margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--neon-cyan);">
+            Performance & Optimization
           </label>
-          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; height: 42px;">
-            <span style="font-size: 13px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px;">
-              <i data-lucide="eye-off" style="width: 16px; height: 16px; color: var(--neon-cyan);"></i> Disable 3D Space Backdrop
-            </span>
-            <label class="hud-toggle size-sm">
-              <input type="checkbox" id="settings-disable-3d-toggle" onchange="toggle3DBackground(this.checked)">
-              <span class="hud-toggle-slider"></span>
-            </label>
+          
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Preset Dropdown -->
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 12px;">
+              <span style="font-size: 12px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="zap" style="width: 14px; height: 14px; color: var(--neon-orange);"></i> Performance Preset
+              </span>
+              <select id="settings-perf-preset" onchange="applyPresetSettings(this.value)" class="hud-select" style="padding: 4px 8px; font-size: 12px; border-radius: 8px; background: #0f172a; color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); width: 180px;">
+                <option value="max-beauty">Max Quality & Beauty</option>
+                <option value="balanced">Balanced Mode</option>
+                <option value="max-opt">Max Optimization (0.1% CPU)</option>
+              </select>
+            </div>
+
+            <!-- Max Optimization Toggle -->
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 12px;">
+              <span style="font-size: 12px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="gauge" style="width: 14px; height: 14px; color: var(--neon-emerald);"></i> Max Optimization Mode
+              </span>
+              <label class="hud-toggle size-sm">
+                <input type="checkbox" id="settings-max-opt-toggle" onchange="toggleMaxOptimization(this.checked)">
+                <span class="hud-toggle-slider"></span>
+              </label>
+            </div>
+
+            <!-- Button Glows Toggle -->
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 12px;">
+              <span style="font-size: 12px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--neon-purple);"></i> Button Neon Glows
+              </span>
+              <label class="hud-toggle size-sm">
+                <input type="checkbox" id="settings-button-glow-toggle" checked onchange="toggleButtonGlows(this.checked)">
+                <span class="hud-toggle-slider"></span>
+              </label>
+            </div>
+
+            <!-- 3D Space Background Quality -->
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 12px;">
+              <span style="font-size: 12px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="globe" style="width: 14px; height: 14px; color: var(--neon-cyan);"></i> 3D Space Quality
+              </span>
+              <select id="settings-3d-quality" onchange="localStorage.setItem('chrono_3d_quality', this.value); rebuild3DScene(this.value);" class="hud-select" style="padding: 4px 8px; font-size: 12px; border-radius: 8px; background: #0f172a; color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); width: 180px;">
+                <option value="high">High (Planets + Stars)</option>
+                <option value="medium">Medium (Planets Only)</option>
+                <option value="low">Low (Stars Only)</option>
+                <option value="disabled">Disabled (WebGL Off)</option>
+              </select>
+            </div>
           </div>
-          <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4;">
-            Turn off the WebGL 3D space background to maximize performance on lower-end devices.
+          
+          <p style="font-size: 10px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+            Max Optimization disables all heavy CSS drop-shadows, animations, and transitions, forcing solid flat backgrounds to achieve 0.1% CPU usage.
           </p>
         </div>
 
@@ -918,6 +959,14 @@
       const savedTheme = localStorage.getItem('aether_theme_preset') || 'theme-forest';
       document.body.className = '';
       document.body.classList.add(savedTheme);
+      
+      // Apply saved performance optimizations to avoid screen layout flash
+      if (localStorage.getItem('chrono_max_opt') === 'true') {
+        document.body.classList.add('max-optimized');
+      }
+      if (localStorage.getItem('chrono_button_glow') === 'false') {
+        document.body.classList.add('no-glows');
+      }
       
       // Wait for DOM to sync swatch active classes
       window.addEventListener('DOMContentLoaded', () => {

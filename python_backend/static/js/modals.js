@@ -367,9 +367,31 @@ function launchSettingsModal() {
     tourToggle.checked = localStorage.getItem('chrono_demo_tour_autolaunch') !== 'false';
   }
   
-  const disable3dToggle = document.getElementById('settings-disable-3d-toggle');
-  if (disable3dToggle) {
-    disable3dToggle.checked = localStorage.getItem('chrono_disable_3d') === 'true';
+  // Sync Performance controls
+  const presetSelect = document.getElementById('settings-perf-preset');
+  if (presetSelect) {
+    let savedPreset = 'max-beauty';
+    if (localStorage.getItem('chrono_max_opt') === 'true') {
+      savedPreset = 'max-opt';
+    } else if (localStorage.getItem('chrono_3d_quality') === 'medium') {
+      savedPreset = 'balanced';
+    }
+    presetSelect.value = savedPreset;
+  }
+
+  const maxOptToggle = document.getElementById('settings-max-opt-toggle');
+  if (maxOptToggle) {
+    maxOptToggle.checked = localStorage.getItem('chrono_max_opt') === 'true';
+  }
+
+  const buttonGlowToggle = document.getElementById('settings-button-glow-toggle');
+  if (buttonGlowToggle) {
+    buttonGlowToggle.checked = localStorage.getItem('chrono_button_glow') !== 'false';
+  }
+
+  const select3d = document.getElementById('settings-3d-quality');
+  if (select3d) {
+    select3d.value = localStorage.getItem('chrono_3d_quality') || 'high';
   }
   
   // Sync the theme preset swatch active highlights
@@ -380,6 +402,126 @@ function launchSettingsModal() {
   
   displayModal('modal-settings-popup');
   lucide.createIcons();
+}
+
+function toggleMaxOptimization(enabled) {
+  localStorage.setItem('chrono_max_opt', enabled ? 'true' : 'false');
+  
+  const body = document.body;
+  if (enabled) {
+    body.classList.add('max-optimized');
+    // Set 3D quality to disabled
+    const select3d = document.getElementById('settings-3d-quality');
+    if (select3d) {
+      select3d.value = 'disabled';
+      localStorage.setItem('chrono_3d_quality', 'disabled');
+      if (typeof rebuild3DScene === 'function') {
+        rebuild3DScene('disabled');
+      }
+    }
+    // Set button glow to disabled
+    const buttonGlowToggle = document.getElementById('settings-button-glow-toggle');
+    if (buttonGlowToggle) {
+      buttonGlowToggle.checked = false;
+      localStorage.setItem('chrono_button_glow', 'false');
+      body.classList.add('no-glows');
+    }
+    // Update preset selector
+    const presetSelect = document.getElementById('settings-perf-preset');
+    if (presetSelect) {
+      presetSelect.value = 'max-opt';
+    }
+    if (typeof showSpringToast === 'function') {
+      showSpringToast('Maximum Optimization Mode Active');
+    }
+  } else {
+    body.classList.remove('max-optimized');
+    // Revert to balanced
+    const presetSelect = document.getElementById('settings-perf-preset');
+    if (presetSelect) {
+      presetSelect.value = 'balanced';
+      applyPresetSettings('balanced');
+    }
+  }
+}
+
+function toggleButtonGlows(enabled) {
+  localStorage.setItem('chrono_button_glow', enabled ? 'true' : 'false');
+  const body = document.body;
+  if (enabled) {
+    body.classList.remove('no-glows');
+  } else {
+    body.classList.add('no-glows');
+  }
+  
+  // Uncheck max opt if button glows are re-enabled
+  if (enabled && localStorage.getItem('chrono_max_opt') === 'true') {
+    const maxOptToggle = document.getElementById('settings-max-opt-toggle');
+    if (maxOptToggle) maxOptToggle.checked = false;
+    localStorage.setItem('chrono_max_opt', 'false');
+    body.classList.remove('max-optimized');
+    const presetSelect = document.getElementById('settings-perf-preset');
+    if (presetSelect) presetSelect.value = 'balanced';
+  }
+}
+
+function applyPresetSettings(preset) {
+  const select3d = document.getElementById('settings-3d-quality');
+  const buttonGlowToggle = document.getElementById('settings-button-glow-toggle');
+  const maxOptToggle = document.getElementById('settings-max-opt-toggle');
+  const body = document.body;
+  
+  if (preset === 'max-beauty') {
+    if (select3d) select3d.value = 'high';
+    if (buttonGlowToggle) buttonGlowToggle.checked = true;
+    if (maxOptToggle) maxOptToggle.checked = false;
+    
+    localStorage.setItem('chrono_3d_quality', 'high');
+    localStorage.setItem('chrono_button_glow', 'true');
+    localStorage.setItem('chrono_max_opt', 'false');
+    
+    body.classList.remove('max-optimized', 'no-glows');
+    if (typeof rebuild3DScene === 'function') {
+      rebuild3DScene('high');
+    }
+    if (typeof showSpringToast === 'function') {
+      showSpringToast('Preset: Max Quality & Beauty');
+    }
+  } 
+  else if (preset === 'balanced') {
+    if (select3d) select3d.value = 'medium';
+    if (buttonGlowToggle) buttonGlowToggle.checked = true;
+    if (maxOptToggle) maxOptToggle.checked = false;
+    
+    localStorage.setItem('chrono_3d_quality', 'medium');
+    localStorage.setItem('chrono_button_glow', 'true');
+    localStorage.setItem('chrono_max_opt', 'false');
+    
+    body.classList.remove('max-optimized', 'no-glows');
+    if (typeof rebuild3DScene === 'function') {
+      rebuild3DScene('medium');
+    }
+    if (typeof showSpringToast === 'function') {
+      showSpringToast('Preset: Balanced Performance');
+    }
+  } 
+  else if (preset === 'max-opt') {
+    if (select3d) select3d.value = 'disabled';
+    if (buttonGlowToggle) buttonGlowToggle.checked = false;
+    if (maxOptToggle) maxOptToggle.checked = true;
+    
+    localStorage.setItem('chrono_3d_quality', 'disabled');
+    localStorage.setItem('chrono_button_glow', 'false');
+    localStorage.setItem('chrono_max_opt', 'true');
+    
+    body.classList.add('max-optimized', 'no-glows');
+    if (typeof rebuild3DScene === 'function') {
+      rebuild3DScene('disabled');
+    }
+    if (typeof showSpringToast === 'function') {
+      showSpringToast('Preset: Max Optimization Mode');
+    }
+  }
 }
 
 function syncSettingsAutoSolve(checked) {

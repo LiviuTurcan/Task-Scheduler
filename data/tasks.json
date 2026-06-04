@@ -1,1 +1,83 @@
-[]
+[
+  {
+    "can_split": true,
+    "deadline": "2026-06-10T18:00:00",
+    "dependencies": [],
+    "difficulty": 3,
+    "duration_minutes": 120,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 1,
+    "name": "Prepare Presentation",
+    "priority": 4,
+    "subtasks": [
+      {
+        "completed": true,
+        "name": "Create slides outline"
+      },
+      {
+        "completed": false,
+        "name": "Add design details"
+      }
+    ]
+  },
+  {
+    "can_split": false,
+    "deadline": "2026-06-12T17:00:00",
+    "dependencies": [],
+    "difficulty": 4,
+    "duration_minutes": 180,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 2,
+    "name": "Report Submission",
+    "priority": 5,
+    "subtasks": []
+  },
+  {
+    "can_split": true,
+    "deadline": "2026-06-14T20:00:00",
+    "dependencies": [],
+    "difficulty": 2,
+    "duration_minutes": 90,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 3,
+    "name": "Math Homework Assignment",
+    "priority": 3,
+    "subtasks": []
+  },
+  {
+    "can_split": true,
+    "deadline": "2026-06-13T19:00:00",
+    "dependencies": [],
+    "difficulty": 4,
+    "duration_minutes": 240,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 4,
+    "name": "Figma UI Prototyping",
+    "priority": 4,
+    "subtasks": []
+  },
+  {
+    "can_split": false,
+    "deadline": "2026-06-11T16:00:00",
+    "dependencies": [
+      1
+    ],
+    "difficulty": 2,
+    "duration_minutes": 60,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 5,
+    "name": "Code Review & Push",
+    "priority": 3,
+    "subtasks": []
+  }
+]

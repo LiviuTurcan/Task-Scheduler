@@ -778,5 +778,76 @@ body.tour-cinematic-mode .tour-overlay {
   -webkit-backdrop-filter: none !important;
 }
 
+/* ==========================================================================
+   PERFORMANCE AND OPTIMIZATION OVERRIDES
+   ========================================================================== */
+
+/* Hide glow blobs in max-optimized mode */
+body.max-optimized .glow-blob {
+  display: none !important;
+}
+
+/* Disable all animations and transitions in max-optimized mode */
+body.max-optimized *,
+body.max-optimized *::before,
+body.max-optimized *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Strip backdrop filters in max-optimized mode */
+body.max-optimized .glass-card,
+body.max-optimized .hud-modal-box,
+body.max-optimized header,
+body.max-optimized aside,
+body.max-optimized main,
+body.max-optimized div,
+body.max-optimized section,
+body.max-optimized span,
+body.max-optimized a,
+body.max-optimized button {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Disable neon glows and shadows when requested (either button glows disabled OR max-optimized active) */
+body.no-glows *,
+body.no-glows *::before,
+body.no-glows *::after,
+body.max-optimized *,
+body.max-optimized *::before,
+body.max-optimized *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* Fallback background colors for elements that rely on backdrop-filter to be readable */
+body.max-optimized .glass-card,
+body.max-optimized .hud-modal-box {
+  background: var(--bg-void) !important;
+  border: var(--border-wire) !important;
+}
+
+body.max-optimized header.glass-card {
+  background: var(--bg-void) !important;
+  border-bottom: var(--border-wire) !important;
+}
+
+body.max-optimized aside.sidebar-dock {
+  background: var(--bg-void) !important;
+  border-right: var(--border-wire) !important;
+}
+
+body.max-optimized .time-slot-card {
+  background: var(--bg-panel) !important;
+  box-shadow: none !important;
+}
+
+body.max-optimized .calendar-grid-cell {
+  background: var(--bg-void) !important;
+}
+
+
 
 
