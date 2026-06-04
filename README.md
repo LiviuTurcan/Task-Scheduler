@@ -23,7 +23,7 @@ The script will:
 2. ✅ Create a virtual environment (`.venv`)
 3. ✅ Install all Python dependencies from `requirements.txt`
 4. ✅ Compile the C++ engine (if `g++` / `clang++` is available)
-5. ✅ Start the Flask server and open the browser at **http://127.0.0.1:5000/**
+5. ✅ Start the Flask server and open the browser. It prefers **http://127.0.0.1:5000/** and automatically uses the next available port if 5000 is busy.
 
 ---
 
@@ -83,7 +83,7 @@ g++ -std=c++17 -O2 \
 ```bash
 python -m python_backend.web
 ```
-Then open http://127.0.0.1:5000/ in your browser.
+Then open the URL printed in the terminal. By default it is http://127.0.0.1:5000/, or the next available port if 5000 is busy.
 
 ### 4. Run Smoke Tests
 ```bash

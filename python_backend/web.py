@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
+import os
+import socket
+import threading
+import webbrowser
 from flask import Flask, request, jsonify, render_template
 
 from .app_controller import AppController, SchedulerExecutionError
@@ -9,6 +12,10 @@ from .app_controller import AppController, SchedulerExecutionError
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 5000
+MAX_PORT = 65535
+PORT_SEARCH_LIMIT = 100
 
 
 @app.after_request
@@ -63,6 +70,53 @@ def run():
     return jsonify({"success": True, "schedule": schedule})
 
 
+def is_port_available(host: str, port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind((host, port))
+        except OSError:
+            return False
+    return True
+
+
+def find_available_port(host: str, preferred_port: int = DEFAULT_PORT) -> int:
+    last_port = min(preferred_port + PORT_SEARCH_LIMIT - 1, MAX_PORT)
+    for port in range(preferred_port, last_port + 1):
+        if is_port_available(host, port):
+            return port
+
+    raise RuntimeError(
+        f"No available port found from {preferred_port} to {last_port}."
+    )
+
+
+def get_preferred_port() -> int:
+    raw_port = os.environ.get("TASK_SCHEDULER_PORT")
+    if not raw_port:
+        return DEFAULT_PORT
+
+    try:
+        port = int(raw_port)
+    except ValueError as exc:
+        raise ValueError("TASK_SCHEDULER_PORT must be an integer.") from exc
+
+    if not 1 <= port <= MAX_PORT:
+        raise ValueError(f"TASK_SCHEDULER_PORT must be between 1 and {MAX_PORT}.")
+
+    return port
+
+
+def maybe_open_browser(url: str) -> None:
+    if os.environ.get("TASK_SCHEDULER_OPEN_BROWSER") == "1":
+        threading.Timer(1.0, webbrowser.open, args=(url,)).start()
+
+
 if __name__ == "__main__":
-    # Run a dev server on localhost:5000
-    app.run(host="127.0.0.1", port=5000)
+    # Prefer localhost:5000, then use the next free port if it is busy.
+    host = os.environ.get("TASK_SCHEDULER_HOST", DEFAULT_HOST)
+    port = find_available_port(host, get_preferred_port())
+    url = f"http://{host}:{port}/"
+    print(f"Task Scheduler server is starting at {url}")
+    maybe_open_browser(url)
+    app.run(host=host, port=port)

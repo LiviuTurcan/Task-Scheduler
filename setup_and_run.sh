@@ -86,16 +86,10 @@ echo
 echo "[5/5] Starting the Task Scheduler server..."
 echo
 echo "======================================================"
-echo "  Server is starting at http://127.0.0.1:5000/"
+echo "  Server is starting on localhost, preferring port 5000."
+echo "  If that port is busy, the next available port will be used."
 echo "  Press Ctrl+C to stop the server."
 echo "======================================================"
 echo
 
-# Open browser (best-effort, non-fatal if it fails)
-if command -v xdg-open &>/dev/null; then
-    xdg-open "http://127.0.0.1:5000/" &
-elif command -v open &>/dev/null; then
-    open "http://127.0.0.1:5000/" &
-fi
-
-$PYTHON_CMD -m python_backend.web
+TASK_SCHEDULER_OPEN_BROWSER=1 $PYTHON_CMD -m python_backend.web
