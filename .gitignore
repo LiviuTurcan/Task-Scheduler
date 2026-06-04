@@ -1,4 +1,3 @@
-# Compiled binaries (except the pre-built scheduler)
 *.exe
 !cpp_engine/scheduler.exe
 *.pdf
@@ -8,8 +7,6 @@ __pycache__/
 *.py[cod]
 .venv/
 
-.data/
-data/
 # OS files
 .DS_Store
 Thumbs.db
