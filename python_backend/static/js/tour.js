@@ -31,7 +31,7 @@ const tourSteps = [
   },
   {
     title: "Vanilla Drag Snapping",
-    text: "Need manual adjustments? Simply **drag and drop** any scheduled task block vertically! It snaps to a 15-minute grid, locks the task in place, and triggers the optimizer to recalculate the rest of your schedule.",
+    text: "Need manual adjustments? Simply **drag and drop** or **resize** any scheduled task block vertically! It snaps to the nearest grid interval, locks the task in place, and triggers the optimizer to recalculate the rest of your schedule.",
     target: "div.visual-blocks-col",
     position: "left"
   }

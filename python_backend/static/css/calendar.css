@@ -234,10 +234,33 @@
   overflow: hidden;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  touch-action: none; /* Safari/Mac drag-and-drop gesture conflict fix */
 }
 
 .timeline-block:active {
   cursor: grabbing;
+}
+
+.timeline-block.resizing-active {
+  opacity: 0.85;
+  z-index: 1000 !important;
+  border-color: #fff !important;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.5), 0 0 25px rgba(var(--neon-accent-rgb), 0.6) !important;
+}
+
+.block-resize-handle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  cursor: ns-resize;
+  background: transparent;
+  z-index: 10;
+}
+
+.block-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Drag-and-drop dragging active state style */

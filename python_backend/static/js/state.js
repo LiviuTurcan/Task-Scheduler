@@ -13,6 +13,88 @@ let endedTasks = JSON.parse(localStorage.getItem('chrono_ended_tasks_archive')) 
 let isAutoSolve = true;
 let isScheduleOutOfSync = false;
 
+function serializeTaskToVirtualEventName(task) {
+  const depsStr = (task.dependencies || []).join(',');
+  const subtasksStr = encodeURIComponent(JSON.stringify(task.subtasks || []));
+  const metadata = [
+    task.id,
+    task.priority,
+    task.difficulty,
+    task.deadline,
+    task.can_split,
+    depsStr,
+    task.duration_minutes,
+    subtasksStr
+  ].join(':');
+  return `__vt__:${metadata}__:${task.name}`;
+}
+
+function deserializeVirtualEventToTask(evt) {
+  if (!evt.name || !evt.name.startsWith('__vt__:')) return null;
+  const match = evt.name.match(/^__vt__:([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]*):([^:]+):([^:]+)__:(.+)$/);
+  if (!match) return null;
+  
+  const taskId = parseInt(match[1]);
+  const priority = parseInt(match[2]);
+  const difficulty = parseInt(match[3]);
+  const deadline = match[4];
+  const canSplit = match[5] === 'true';
+  const dependencies = match[6] ? match[6].split(',').map(id => parseInt(id)) : [];
+  const duration = parseInt(match[7]);
+  let subtasks = [];
+  try {
+    subtasks = JSON.parse(decodeURIComponent(match[8]));
+  } catch (e) {
+    console.error("Failed to parse subtasks from virtual event", e);
+  }
+  const name = match[9];
+  
+  return {
+    id: taskId,
+    name: name,
+    duration_minutes: duration,
+    deadline: deadline,
+    priority: priority,
+    difficulty: difficulty,
+    dependencies: dependencies,
+    can_split: canSplit,
+    subtasks: subtasks,
+    fixed: true,
+    fixed_start: evt.start,
+    fixed_end: evt.end
+  };
+}
+
+function buildOptimizationPayload() {
+  const payloadTasks = [];
+  const payloadFixedEvents = [...fixedEvents];
+  
+  let maxFixedEventId = 0;
+  fixedEvents.forEach(e => {
+    if (e.id > maxFixedEventId) maxFixedEventId = e.id;
+  });
+  
+  tasks.forEach(task => {
+    if (task.fixed && task.fixed_start && task.fixed_end) {
+      const virtualId = maxFixedEventId + 1 + task.id;
+      payloadFixedEvents.push({
+        id: virtualId,
+        name: serializeTaskToVirtualEventName(task),
+        start: task.fixed_start,
+        end: task.fixed_end
+      });
+    } else {
+      payloadTasks.push(task);
+    }
+  });
+
+  return {
+    tasks: payloadTasks,
+    availability: availability,
+    fixed_events: payloadFixedEvents
+  };
+}
+
 function toggleAutoSolveState(checked) {
   isAutoSolve = checked;
   showSpringToast(`Live Auto-Solve is now ${isAutoSolve ? 'ENABLED' : 'DISABLED'}`);
@@ -169,9 +251,27 @@ async function fetchServerInputs() {
     const data = await res.json();
     
     if (data.success) {
-      tasks = data.tasks || [];
+      const serverTasks = data.tasks || [];
+      const serverFixedEvents = data.fixed_events || [];
+      
+      const restoredTasks = [...serverTasks];
+      const restoredFixedEvents = [];
+      
+      serverFixedEvents.forEach(evt => {
+        const restoredTask = deserializeVirtualEventToTask(evt);
+        if (restoredTask) {
+          const exists = restoredTasks.some(t => t.id === restoredTask.id);
+          if (!exists) {
+            restoredTasks.push(restoredTask);
+          }
+        } else {
+          restoredFixedEvents.push(evt);
+        }
+      });
+      
+      tasks = restoredTasks;
       availability = data.availability || [];
-      fixedEvents = data.fixed_events || [];
+      fixedEvents = restoredFixedEvents;
       
       // Auto-align calendar view week starting date based on first loaded task or availability date
       // Only do this if they exist and are in a different week to preserve "today" focus
@@ -210,11 +310,7 @@ async function fetchServerInputs() {
       // Scan and archive any ended/expired tasks right away
       const didArchiveOnLoad = scanAndArchiveEndedTasks();
       if (didArchiveOnLoad) {
-        const payload = {
-          tasks: tasks,
-          availability: availability,
-          fixed_events: fixedEvents
-        };
+        const payload = buildOptimizationPayload();
         fetch('/run', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
@@ -260,11 +356,7 @@ async function triggerSchedulerOptimization(silent = false) {
     startFakeCppCompilerStream();
   }
 
-  const payload = {
-    tasks: tasks,
-    availability: availability,
-    fixed_events: fixedEvents
-  };
+  const payload = buildOptimizationPayload();
 
   try {
     const res = await fetch('/run', {
@@ -276,6 +368,36 @@ async function triggerSchedulerOptimization(silent = false) {
     
     if (data.success) {
       scheduleOutput = data.schedule;
+      
+      // Append manually scheduled (fixed) tasks back into the output schedule
+      tasks.forEach(task => {
+        if (task.fixed && task.fixed_start && task.fixed_end) {
+          const exists = scheduleOutput.schedule.some(seg => seg.task_id === task.id);
+          if (!exists) {
+            scheduleOutput.schedule.push({
+              task_id: task.id,
+              task_name: task.name,
+              start: task.fixed_start,
+              end: task.fixed_end,
+              priority: task.priority,
+              deadline: task.deadline
+            });
+          }
+        }
+      });
+      
+      // Correct statistics to reflect virtualized fixed tasks
+      if (scheduleOutput.statistics) {
+        const totalGlobalTasks = tasks.length;
+        const fixedTasksCount = tasks.filter(t => t.fixed && t.fixed_start && t.fixed_end).length;
+        
+        scheduleOutput.statistics.total_tasks = totalGlobalTasks;
+        scheduleOutput.statistics.scheduled_tasks = (scheduleOutput.statistics.scheduled_tasks || 0) + fixedTasksCount;
+        scheduleOutput.statistics.unscheduled_tasks = totalGlobalTasks - scheduleOutput.statistics.scheduled_tasks;
+        if (scheduleOutput.statistics.unscheduled_tasks < 0) {
+          scheduleOutput.statistics.unscheduled_tasks = 0;
+        }
+      }
       
       clearScheduleOutOfSync();
       

@@ -302,11 +302,12 @@ function renderTimelineView() {
               ${isEnded ? '<span class="block-split-badge" style="background:rgba(244,63,94,0.18); border:1px solid rgba(244,63,94,0.35); color:var(--neon-rose); text-transform:uppercase;">Ended</span>' : `<span style="font-size:9.5px; font-weight:700; color:var(--text-secondary);">Prio: ${seg.priority}</span>`}
             </span>
           </div>
+          ${isEnded ? '' : '<div class="block-resize-handle"></div>'}
         `;
 
         // Tooltip triggers
         block.addEventListener('mousemove', (e) => {
-          if (!block.classList.contains('dragging-active')) {
+          if (!block.classList.contains('dragging-active') && !block.classList.contains('resizing-active')) {
             triggerHoverTooltip(e, {
               name: seg.task_name,
               type: 'Optimized Task Allocation',
@@ -323,6 +324,13 @@ function renderTimelineView() {
 
         // ATTACH ACTIVE DRAG-AND-DROP TRIGGERS (PHASE 8)
         makeTimelineBlockDraggable(block, seg, Math.round(duration * 60));
+        
+        if (!isEnded) {
+          const handle = block.querySelector('.block-resize-handle');
+          if (handle) {
+            makeTimelineBlockResizable(block, handle, seg);
+          }
+        }
 
         schedWrapper.appendChild(block);
 
@@ -383,8 +391,8 @@ function makeTimelineBlockDraggable(element, segment, durationMinutes) {
     // Left click / primary touch point only
     if (e.button !== 0) return;
     
-    // Ignore if clicking input fields or buttons
-    if (e.target.closest('button') || e.target.closest('input')) return;
+    // Ignore if clicking input fields, buttons, or the resize handle
+    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.block-resize-handle')) return;
     
     e.preventDefault();
     dismissHoverTooltip(); // hide popover while moving
@@ -396,6 +404,9 @@ function makeTimelineBlockDraggable(element, segment, durationMinutes) {
     const styleTop = element.style.top;
     startTop = styleTop ? parseInt(styleTop, 10) : element.offsetTop;
     if (isNaN(startTop)) startTop = 0;
+    
+    // Capture pointer events to ensure mouse movements outside the element are captured (Safari/Mac drag fix)
+    element.setPointerCapture(e.pointerId);
     
     document.addEventListener('pointermove', onDragMove);
     document.addEventListener('pointerup', onDragEnd);
@@ -460,6 +471,7 @@ function makeTimelineBlockDraggable(element, segment, durationMinutes) {
       tasks[taskIdx].fixed = true;
       tasks[taskIdx].fixed_start = newStartISO;
       tasks[taskIdx].fixed_end = newEndISO;
+      tasks[taskIdx].duration_minutes = durationMinutes; // Unify duration into 1 task block
       
       showSpringToast(`Rescheduled "${tasks[taskIdx].name}" manually. Solver locking slot.`);
       
@@ -478,6 +490,110 @@ function makeTimelineBlockDraggable(element, segment, durationMinutes) {
     }
   }
 }
+
+// Snaps block height / duration to 15-minute intervals (15px)
+function makeTimelineBlockResizable(element, handle, segment) {
+  let startY = 0;
+  let startHeight = 0;
+  let isResizing = false;
+
+  handle.addEventListener('dragstart', (e) => e.preventDefault());
+
+  handle.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    e.stopPropagation(); // Avoid triggering parent drag-and-drop
+    e.preventDefault();
+    dismissHoverTooltip();
+    
+    isResizing = true;
+    element.classList.add('resizing-active');
+    startY = e.clientY;
+    startHeight = element.offsetHeight;
+    
+    // Capture pointer events (Safari/Mac drag fix)
+    handle.setPointerCapture(e.pointerId);
+    
+    document.addEventListener('pointermove', onResizeMove);
+    document.addEventListener('pointerup', onResizeEnd);
+    document.addEventListener('pointercancel', onResizeEnd);
+  });
+
+  function onResizeMove(e) {
+    if (!isResizing) return;
+    
+    let dy = e.clientY - startY;
+    let newHeight = startHeight + dy;
+    
+    // Snap to 15-minute grid (15px)
+    newHeight = Math.round(newHeight / 15) * 15;
+    
+    // Minimum block height 15px (15 minutes)
+    newHeight = Math.max(15, newHeight);
+    
+    const topPx = parseInt(element.style.top, 10) || 0;
+    const maxVal = 1440 - topPx; // Cannot exceed midnight
+    newHeight = Math.min(newHeight, maxVal);
+    
+    element.style.height = newHeight + 'px';
+    
+    // Live feedback end time update
+    const startHour = Math.floor(topPx / 60);
+    const startMins = topPx % 60;
+    const endTotal = topPx + newHeight;
+    const endHour = Math.floor(endTotal / 60);
+    const endMins = endTotal % 60;
+    
+    const timeString = `${String(startHour).padStart(2, '0')}:${String(startMins).padStart(2, '0')} - ${String(endHour).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+    const hoursTag = element.querySelector('.block-hours-tag');
+    if (hoursTag) {
+      hoursTag.textContent = timeString;
+    }
+  }
+
+  async function onResizeEnd(e) {
+    if (!isResizing) return;
+    isResizing = false;
+    
+    document.removeEventListener('pointermove', onResizeMove);
+    document.removeEventListener('pointerup', onResizeEnd);
+    document.removeEventListener('pointercancel', onResizeEnd);
+    
+    element.classList.remove('resizing-active');
+    
+    const finalHeight = parseInt(element.style.height, 10) || 15;
+    const topPx = parseInt(element.style.top, 10) || 0;
+    const newDurationMin = finalHeight;
+    
+    const startHour = Math.floor(topPx / 60);
+    const startMins = topPx % 60;
+    const endTotal = topPx + newDurationMin;
+    const endHour = Math.floor(endTotal / 60);
+    const endMins = endTotal % 60;
+    
+    const newStartISO = `${activeDayDateString}T${String(startHour).padStart(2, '0')}:${String(startMins).padStart(2, '0')}:00`;
+    const newEndISO = `${activeDayDateString}T${String(endHour).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
+    
+    const taskIdx = tasks.findIndex(t => String(t.id) === String(segment.task_id));
+    if (taskIdx !== -1) {
+      tasks[taskIdx].fixed = true;
+      tasks[taskIdx].fixed_start = newStartISO;
+      tasks[taskIdx].fixed_end = newEndISO;
+      tasks[taskIdx].duration_minutes = newDurationMin; // Change duration to 1 task
+      
+      showSpringToast(`Resized "${tasks[taskIdx].name}" duration to ${newDurationMin}m.`);
+      
+      syncStateToVisualDocks();
+      
+      if (isAutoSolve) {
+        await triggerSchedulerOptimization(true);
+      } else {
+        markScheduleOutOfSync();
+      }
+    } else {
+      showSpringToast('Resize error. Task template missing.', 'error');
+      renderTimelineView();
+    }
+  }
 
 // Generate dots counter under day labels
 function updateWeekDensityDotCounters() {
