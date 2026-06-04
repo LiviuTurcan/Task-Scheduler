@@ -61,34 +61,35 @@ echo.
 
 :: ---- Step 4: Build C++ engine (optional) ----
 echo [4/5] Checking C++ engine...
-if exist "cpp_engine\scheduler.exe" (
-    echo [OK] scheduler.exe already exists — skipping compilation.
-) else (
-    echo [INFO] scheduler.exe not found. Attempting to compile...
-    where g++ >nul 2>&1
-    if %ERRORLEVEL% neq 0 (
-        echo [WARNING] g++ not found. Please compile the C++ engine manually.
+where g++ >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    if exist "cpp_engine\scheduler.exe" (
+        echo [WARNING] g++ not found. Using the existing scheduler.exe.
+        echo           To pick up source changes, install MinGW-w64 or MSYS2 and rebuild.
+    ) else (
+        echo [WARNING] g++ not found and scheduler.exe is missing.
         echo           Install MinGW-w64 or MSYS2, then run:
         echo           g++ -std=c++17 -O2 cpp_engine\main.cpp cpp_engine\json_io.cpp ^
         echo             cpp_engine\algorithms\time_utils.cpp cpp_engine\algorithms\algorithms.cpp ^
         echo             cpp_engine\algorithms\scheduler.cpp cpp_engine\algorithms\scoring.cpp ^
         echo             -o cpp_engine\scheduler.exe
-    ) else (
-        g++ -std=c++17 -O2 ^
-            cpp_engine\main.cpp ^
-            cpp_engine\json_io.cpp ^
-            cpp_engine\algorithms\time_utils.cpp ^
-            cpp_engine\algorithms\algorithms.cpp ^
-            cpp_engine\algorithms\scheduler.cpp ^
-            cpp_engine\algorithms\scoring.cpp ^
-            -o cpp_engine\scheduler.exe
-        if %ERRORLEVEL% neq 0 (
-            echo [ERROR] C++ compilation failed.
-            pause
-            exit /b 1
-        )
-        echo [OK] scheduler.exe compiled successfully.
     )
+) else (
+    echo [INFO] Rebuilding scheduler.exe from source...
+    g++ -std=c++17 -O2 ^
+        cpp_engine\main.cpp ^
+        cpp_engine\json_io.cpp ^
+        cpp_engine\algorithms\time_utils.cpp ^
+        cpp_engine\algorithms\algorithms.cpp ^
+        cpp_engine\algorithms\scheduler.cpp ^
+        cpp_engine\algorithms\scoring.cpp ^
+        -o cpp_engine\scheduler.exe
+    if %ERRORLEVEL% neq 0 (
+        echo [ERROR] C++ compilation failed.
+        pause
+        exit /b 1
+    )
+    echo [OK] scheduler.exe compiled successfully.
 )
 echo.
 

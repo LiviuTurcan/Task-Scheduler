@@ -226,7 +226,7 @@ function renderTimelineView() {
         block.style.height = heightPx + 'px';
         block.innerHTML = `
           <div class="block-header-box">
-            <span class="block-headline">${escapeHtml(task.name)}</span>
+            <span class="block-headline">${escapeHtml(formatTaskDisplayLabel(task))}</span>
             <span class="block-hours-tag">${formatTimeClock(start)} - ${formatTimeClock(end)}</span>
           </div>
           <div class="block-footer-box">
@@ -250,6 +250,7 @@ function renderTimelineView() {
 
         chronologicalAgenda.push({
           name: task.name,
+          displayName: formatTaskDisplayLabel(task),
           type: 'ended',
           start: start,
           end: end
@@ -290,7 +291,7 @@ function renderTimelineView() {
         
         block.innerHTML = `
           <div class="block-header-box">
-            <span class="block-headline"><i data-lucide="lock" style="width:11px; display:inline-block; vertical-align:middle; margin-right:2px; color:var(--warning);"></i> ${escapeHtml(task.name)}</span>
+            <span class="block-headline"><i data-lucide="lock" style="width:11px; display:inline-block; vertical-align:middle; margin-right:2px; color:var(--warning);"></i> ${escapeHtml(formatTaskDisplayLabel(task))}</span>
             <span class="block-hours-tag">${formatTimeClock(start)} - ${formatTimeClock(end)}</span>
           </div>
           <div class="block-footer-box">
@@ -329,6 +330,7 @@ function renderTimelineView() {
 
         chronologicalAgenda.push({
           name: task.name,
+          displayName: formatTaskDisplayLabel(task),
           type: 'task',
           start: start,
           end: end,
@@ -394,7 +396,7 @@ function renderTimelineView() {
         
         block.innerHTML = `
           <div class="block-header-box">
-            <span class="block-headline">${escapeHtml(seg.task_name)}</span>
+            <span class="block-headline">${escapeHtml(formatTaskDisplayLabel(seg.task_id, seg.task_name))}</span>
             <span class="block-hours-tag">${formatTimeClock(start)} - ${formatTimeClock(end)}</span>
           </div>
           <div class="block-footer-box">
@@ -438,6 +440,7 @@ function renderTimelineView() {
 
         chronologicalAgenda.push({
           name: seg.task_name,
+          displayName: formatTaskDisplayLabel(seg.task_id, seg.task_name),
           type: 'task',
           start: start,
           end: end,
@@ -462,7 +465,7 @@ function renderTimelineView() {
 
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-weight:800; color:var(--text-primary); font-family:var(--font-title); font-size:15px;">${escapeHtml(item.name)}</div>
+          <div style="font-weight:800; color:var(--text-primary); font-family:var(--font-title); font-size:15px;">${escapeHtml(item.displayName || item.name)}</div>
           <div style="font-size:12px; font-weight:700; color:var(--text-secondary);">${formatTimeClock(item.start)} - ${formatTimeClock(item.end)}</div>
         </div>
         <div class="card-badge-row" style="margin-top:8px;">

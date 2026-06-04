@@ -52,10 +52,16 @@ std::vector<Task> ReadTasks(const std::string& path) {
     task.can_split = item.at("can_split").get<bool>();
     task.fixed = item.at("fixed").get<bool>();
 
-    const auto& fixed_start = item.at("fixed_start");
-    const auto& fixed_end = item.at("fixed_end");
-    task.fixed_start = fixed_start.is_null() ? std::string() : fixed_start.get<std::string>();
-    task.fixed_end = fixed_end.is_null() ? std::string() : fixed_end.get<std::string>();
+    const auto fixed_start = item.find("fixed_start");
+    const auto fixed_end = item.find("fixed_end");
+    task.fixed_start =
+      fixed_start == item.end() || fixed_start->is_null()
+        ? std::string()
+        : fixed_start->get<std::string>();
+    task.fixed_end =
+      fixed_end == item.end() || fixed_end->is_null()
+        ? std::string()
+        : fixed_end->get<std::string>();
 
     tasks.push_back(std::move(task));
   }

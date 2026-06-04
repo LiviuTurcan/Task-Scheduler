@@ -782,7 +782,7 @@ function launchFixProblemModal(taskId, reason) {
     return;
   }
 
-  document.getElementById('fix-task-name').textContent = task.name;
+  document.getElementById('fix-task-name').textContent = formatTaskDisplayLabel(task);
   document.getElementById('fix-task-reason').textContent = `Reason: ${reason}`;
   document.getElementById('fix-task-id').value = taskId;
 

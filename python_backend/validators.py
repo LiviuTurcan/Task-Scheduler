@@ -17,8 +17,6 @@ TASK_FIELDS = {
     "dependencies",
     "can_split",
     "fixed",
-    "fixed_start",
-    "fixed_end",
 }
 
 

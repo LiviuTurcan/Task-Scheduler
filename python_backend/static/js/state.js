@@ -15,6 +15,21 @@ let isScheduleOutOfSync = false;
 let lastSolverError = null;
 let pendingInputSaveTimer = null;
 
+function formatTaskDisplayLabel(taskOrId, fallbackName = '') {
+  if (taskOrId && typeof taskOrId === 'object') {
+    if (taskOrId.id === undefined || taskOrId.id === null) {
+      return taskOrId.name || fallbackName;
+    }
+    return `#${taskOrId.id} ${taskOrId.name || fallbackName}`;
+  }
+
+  if (taskOrId === undefined || taskOrId === null) {
+    return fallbackName;
+  }
+
+  return `#${taskOrId} ${fallbackName}`;
+}
+
 function serializeTaskToVirtualEventName(task) {
   const depsStr = (task.dependencies || []).join(',');
   const subtasksStr = encodeURIComponent(JSON.stringify(task.subtasks || []));
@@ -683,10 +698,11 @@ function renderTodayTasksSummary() {
 
   tasks.forEach(task => {
     const deadline = new Date(task.deadline);
-    const alreadyShown = rows.some(row => row.title === task.name);
+    const taskLabel = formatTaskDisplayLabel(task);
+    const alreadyShown = rows.some(row => row.title === taskLabel);
     if (!alreadyShown && isSameLocalDay(deadline, today)) {
       rows.push({
-        title: task.name,
+        title: taskLabel,
         meta: `Due today at ${formatTimeClock(deadline)}`,
         sortDate: deadline
       });
@@ -729,7 +745,7 @@ function renderUpcomingDeadlinesSummary() {
     const deadline = new Date(task.deadline);
     return `
       <div class="summary-row">
-        <strong>${escapeHtml(task.name)}</strong>
+        <strong>${escapeHtml(formatTaskDisplayLabel(task))}</strong>
         <span>${formatShortDayLabel(deadline)} at ${formatTimeClock(deadline)}</span>
       </div>
     `;
@@ -918,7 +934,7 @@ function syncStateToVisualDocks() {
 
       card.innerHTML = `
         <div class="card-item-top">
-          <div class="card-item-title">${escapeHtml(task.name)}</div>
+          <div class="card-item-title">${escapeHtml(formatTaskDisplayLabel(task))}</div>
           <div class="card-item-actions">
             <button class="card-action-btn" onclick="launchEditTaskModal(${idx})" title="Edit task"><i data-lucide="edit-3" style="width:14px;height:14px;"></i></button>
             <button class="card-action-btn delete" onclick="deleteTaskNode(${idx})" title="Delete task"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
@@ -1088,7 +1104,7 @@ function syncStateToVisualDocks() {
 
         card.innerHTML = `
           <div class="card-item-top">
-            <div class="card-item-title" style="color: var(--neon-rose);">${escapeHtml(task.name)}</div>
+            <div class="card-item-title" style="color: var(--neon-rose);">${escapeHtml(formatTaskDisplayLabel(task))}</div>
             <div class="card-item-actions">
               <button class="card-action-btn delete" onclick="deleteEndedTaskNode(${idx})" title="Delete archived task"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
             </div>
@@ -1184,7 +1200,7 @@ function syncStateToVisualDocks() {
           ${unscheduledArray.map(item => `
             <div class="danger-item-card" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 8px; border-left: 4px solid var(--neon-rose);">
               <div>
-                <strong>${escapeHtml(item.task_name)}</strong>
+                <strong>${escapeHtml(formatTaskDisplayLabel(item.task_id, item.task_name))}</strong>
                 <span style="color:#b5534b; display: block; font-size: 11.5px; margin-top: 4px;"><i data-lucide="alert-circle" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Not planned: ${escapeHtml(item.reason)}</span>
               </div>
               <button class="btn-action-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--neon-cyan); color: var(--neon-cyan); align-self: flex-end; display: flex; align-items: center; gap: 4px; border-radius: 6px; box-shadow: none;" onclick="launchFixProblemModal(${item.task_id}, \`${escapeHtml(item.reason)}\`)" title="Resolve this conflict">
@@ -1195,7 +1211,7 @@ function syncStateToVisualDocks() {
           ${availabilityConflicts.map(item => `
             <div class="danger-item-card" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 8px; border-left: 4px solid var(--neon-orange);">
               <div>
-                <strong>${escapeHtml(item.task_name)}</strong>
+                <strong>${escapeHtml(formatTaskDisplayLabel(item.task_id, item.task_name))}</strong>
                 <span style="color:#a66b2f; display: block; font-size: 11.5px; margin-top: 4px;"><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Outside availability: ${escapeHtml(item.reason)}</span>
               </div>
               <button class="btn-action-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--neon-cyan); color: var(--neon-cyan); align-self: flex-end; display: flex; align-items: center; gap: 4px; border-radius: 6px; box-shadow: none;" onclick="launchFixProblemModal(${item.task_id}, \`${escapeHtml(item.reason)}\`)" title="Resolve this conflict">
