@@ -52,6 +52,10 @@ function renderDynamicWeekDays() {
 
   // Refresh density indicator dots under newly drawn buttons
   updateWeekDensityDotCounters();
+
+  if (typeof renderPlannerHeaderCopy === 'function') {
+    renderPlannerHeaderCopy();
+  }
 }
 
 // Navigate whole week (7 days) in future or past
@@ -136,7 +140,7 @@ function renderTimelineView() {
       panel.className = 'neon-available-panel';
       panel.style.top = topPx + 'px';
       panel.style.height = heightPx + 'px';
-      panel.innerHTML = `<span style="margin-top:8px;"><i data-lucide="unlock" style="width:11px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Available Frame</span>`;
+      panel.innerHTML = `<span style="margin-top:8px;"><i data-lucide="unlock" style="width:11px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Available time</span>`;
       availWrapper.appendChild(panel);
     }
   });
@@ -171,7 +175,7 @@ function renderTimelineView() {
           <span class="block-hours-tag">${formatTimeClock(start)} - ${formatTimeClock(end)}</span>
         </div>
         <div class="block-footer-box">
-          <span class="block-pills-row"><span style="color:#fed7aa; font-weight:700;">Locked Commitment</span></span>
+          <span class="block-pills-row"><span style="color:var(--warning); font-weight:700;">Fixed event</span></span>
         </div>
       `;
 
@@ -227,7 +231,7 @@ function renderTimelineView() {
           </div>
           <div class="block-footer-box">
             <span class="block-pills-row">
-              <span class="block-split-badge" style="background:rgba(244,63,94,0.18); border:1px solid rgba(244,63,94,0.35); color:var(--neon-rose); text-transform:uppercase;">Ended</span>
+              <span class="block-split-badge" style="background:var(--danger-soft); border:1px solid rgba(181,83,75,0.35); color:var(--danger);">Ended</span>
             </span>
           </div>
         `;
@@ -286,13 +290,13 @@ function renderTimelineView() {
         
         block.innerHTML = `
           <div class="block-header-box">
-            <span class="block-headline"><i data-lucide="lock" style="width:11px; display:inline-block; vertical-align:middle; margin-right:2px; color:var(--neon-orange);"></i> ${escapeHtml(task.name)}</span>
+            <span class="block-headline"><i data-lucide="lock" style="width:11px; display:inline-block; vertical-align:middle; margin-right:2px; color:var(--warning);"></i> ${escapeHtml(task.name)}</span>
             <span class="block-hours-tag">${formatTimeClock(start)} - ${formatTimeClock(end)}</span>
           </div>
           <div class="block-footer-box">
             <span class="block-pills-row">
-              <span class="block-split-badge" style="background:rgba(249,115,22,0.18); border:1px solid rgba(249,115,22,0.35); color:var(--neon-orange);">Locked</span>
-              ${isInsideAvail ? '' : '<span class="block-split-badge" style="background:rgba(244,63,94,0.18); border:1px solid rgba(244,63,94,0.35); color:var(--neon-rose);">Outside Availability</span>'}
+              <span class="block-split-badge" style="background:var(--warning-soft); border:1px solid rgba(166,107,47,0.35); color:var(--warning);">Pinned</span>
+              ${isInsideAvail ? '' : '<span class="block-split-badge" style="background:var(--danger-soft); border:1px solid rgba(181,83,75,0.35); color:var(--danger);">Outside availability</span>'}
             </span>
           </div>
           <div class="block-resize-handle"></div>
@@ -303,7 +307,7 @@ function renderTimelineView() {
           if (!block.classList.contains('dragging-active') && !block.classList.contains('resizing-active')) {
             triggerHoverTooltip(e, {
               name: task.name,
-              type: 'Locked Manual Allocation',
+              type: 'Pinned task',
               start: task.fixed_start,
               end: task.fixed_end,
               deadline: task.deadline,
@@ -329,7 +333,7 @@ function renderTimelineView() {
           start: start,
           end: end,
           priority: task.priority,
-          splitLabel: 'Locked'
+          splitLabel: 'Pinned'
         });
       }
     }
@@ -396,8 +400,8 @@ function renderTimelineView() {
           <div class="block-footer-box">
             <span class="block-pills-row">
               ${totalSplits > 1 ? `<span class="block-split-badge">Segment ${currentIdx}/${totalSplits}</span>` : ''}
-              ${isEnded ? '<span class="block-split-badge" style="background:rgba(244,63,94,0.18); border:1px solid rgba(244,63,94,0.35); color:var(--neon-rose); text-transform:uppercase;">Ended</span>' : `<span style="font-size:9.5px; font-weight:700; color:var(--text-secondary);">Prio: ${seg.priority}</span>`}
-              ${isInsideAvail ? '' : '<span class="block-split-badge" style="background:rgba(244,63,94,0.18); border:1px solid rgba(244,63,94,0.35); color:var(--neon-rose);">Outside Availability</span>'}
+              ${isEnded ? '<span class="block-split-badge" style="background:var(--danger-soft); border:1px solid rgba(181,83,75,0.35); color:var(--danger);">Ended</span>' : `<span style="font-size:9.5px; font-weight:700; color:var(--text-secondary);">Priority: ${seg.priority}</span>`}
+              ${isInsideAvail ? '' : '<span class="block-split-badge" style="background:var(--danger-soft); border:1px solid rgba(181,83,75,0.35); color:var(--danger);">Outside availability</span>'}
             </span>
           </div>
           ${isEnded ? '' : '<div class="block-resize-handle"></div>'}
@@ -408,7 +412,7 @@ function renderTimelineView() {
           if (!block.classList.contains('dragging-active') && !block.classList.contains('resizing-active')) {
             triggerHoverTooltip(e, {
               name: seg.task_name,
-              type: 'Optimized Task Allocation',
+              type: 'Planned task',
               start: seg.start,
               end: seg.end,
               deadline: seg.deadline,
@@ -446,20 +450,20 @@ function renderTimelineView() {
 
   // Render Classic Agenda list
   if (chronologicalAgenda.length === 0) {
-    agendaWrapper.innerHTML = '<div class="empty-state">Nothing planned for today. Enjoy your free time!</div>';
+    agendaWrapper.innerHTML = '<div class="empty-state">Nothing planned for today yet.</div>';
   } else {
     chronologicalAgenda.sort((a,b) => a.start - b.start);
     
     chronologicalAgenda.forEach(item => {
       const card = document.createElement('div');
       card.className = 'card-item';
-      card.style.borderLeft = item.type === 'fixed' ? '4px solid var(--neon-orange)' : (item.type === 'ended' ? '4px solid var(--neon-rose)' : '4px solid var(--neon-purple)');
-      card.style.background = 'rgba(12, 6, 32, 0.45)';
+      card.style.borderLeft = item.type === 'fixed' ? '4px solid var(--warning)' : (item.type === 'ended' ? '4px solid var(--danger)' : '4px solid var(--accent)');
+      card.style.background = 'var(--bg-surface)';
 
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-weight:800; color:#fff; font-family:var(--font-title); font-size:15px;">${escapeHtml(item.name)}</div>
-          <div style="font-size:12px; font-weight:700; color:var(--neon-cyan);">${formatTimeClock(item.start)} - ${formatTimeClock(item.end)}</div>
+          <div style="font-weight:800; color:var(--text-primary); font-family:var(--font-title); font-size:15px;">${escapeHtml(item.name)}</div>
+          <div style="font-size:12px; font-weight:700; color:var(--text-secondary);">${formatTimeClock(item.start)} - ${formatTimeClock(item.end)}</div>
         </div>
         <div class="card-badge-row" style="margin-top:8px;">
           <span class="badge-hud ${item.type === 'fixed' ? 'p-coral' : (item.type === 'ended' ? 'p-rose' : 'p-purple')}">${item.type.toUpperCase()}</span>
@@ -587,7 +591,7 @@ function makeTimelineBlockDraggable(element, segment, durationMinutes) {
         });
       }
 
-      showSpringToast(`Rescheduled "${tasks[taskIdx].name}" manually. Solver locking slot.`);
+      showSpringToast(`Pinned "${tasks[taskIdx].name}" and updated the rest of the week.`);
       
       // Update UI cards and Dev JSON accordion
       syncStateToVisualDocks();

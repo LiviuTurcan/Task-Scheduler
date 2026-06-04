@@ -9,10 +9,11 @@ let fixedEvents = [];
 let scheduleOutput = null;
 let endedTasks = JSON.parse(localStorage.getItem('chrono_ended_tasks_archive')) || [];
 
-// Presentation & Auto-Solve States
-let isAutoSolve = true;
+// Presentation & Auto-Plan States
+let isAutoSolve = localStorage.getItem('planner_auto_plan') === 'true';
 let isScheduleOutOfSync = false;
 let lastSolverError = null;
+let pendingInputSaveTimer = null;
 
 function serializeTaskToVirtualEventName(task) {
   const depsStr = (task.dependencies || []).join(',');
@@ -107,40 +108,69 @@ function buildOptimizationPayload() {
   };
 }
 
+function queueInputSave() {
+  if (pendingInputSaveTimer) {
+    clearTimeout(pendingInputSaveTimer);
+  }
+  pendingInputSaveTimer = setTimeout(() => {
+    persistInputsOnly();
+  }, 250);
+}
+
+async function persistInputsOnly() {
+  const payload = buildOptimizationPayload();
+  try {
+    const res = await fetch('/inputs', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Unable to save planner inputs.');
+    }
+  } catch (err) {
+    console.error('persistInputsOnly error', err);
+    showSpringToast('Could not save the latest planner edits.', 'error');
+  }
+}
+
 function toggleAutoSolveState(checked) {
   isAutoSolve = checked;
-  showSpringToast(`Live Auto-Solve is now ${isAutoSolve ? 'ENABLED' : 'DISABLED'}`);
+  localStorage.setItem('planner_auto_plan', isAutoSolve ? 'true' : 'false');
+  showSpringToast(`Automatic planning is ${isAutoSolve ? 'on' : 'off'}.`);
   if (isAutoSolve) {
     clearScheduleOutOfSync();
-    triggerSchedulerOptimization(true); // run silently to sync
+    triggerSchedulerOptimization(true);
   }
 }
 
 function markScheduleOutOfSync() {
   isScheduleOutOfSync = true;
+  queueInputSave();
   
-  // 1. Highlight the Run Optimizer button with pulsing warning styling
+  // Highlight the manual planning button.
   const btn = document.getElementById('btn-run-scheduler');
   if (btn) {
     btn.classList.add('hud-pulse-warning');
     const span = btn.querySelector('span');
-    if (span) span.textContent = 'Solve Pending';
+    if (span) span.textContent = 'Plan needed';
   }
   
-  // 2. Show the warning banner above the calendar
+  // Show the warning banner above the calendar.
   const banner = document.getElementById('calendar-sync-warning-banner');
   if (banner) {
     banner.style.display = 'flex';
   }
   
-  // 3. Log a warning to the Developer Changes Log terminal
+  // Log a warning to the advanced details panel.
   const diffContainer = document.getElementById('dev-optimization-diff-log');
   if (diffContainer) {
     if (!diffContainer.innerHTML.includes('[WARNING]')) {
       const line = document.createElement('div');
       line.style.color = '#fbbf24';
       line.style.fontWeight = 'bold';
-      line.innerHTML = `[WARNING] Schedule is out of sync. Changes are pending. Click 'Solve Pending' above to run the C++ optimizer.`;
+      line.innerHTML = `[WARNING] Planner inputs changed. Click "Plan my week" to refresh the schedule.`;
       diffContainer.insertBefore(line, diffContainer.firstChild);
     }
   }
@@ -149,15 +179,15 @@ function markScheduleOutOfSync() {
 function clearScheduleOutOfSync() {
   isScheduleOutOfSync = false;
   
-  // 1. Reset Run Optimizer button
+  // Reset Plan my week button.
   const btn = document.getElementById('btn-run-scheduler');
   if (btn) {
     btn.classList.remove('hud-pulse-warning');
     const span = btn.querySelector('span');
-    if (span) span.textContent = 'Run Optimizer';
+    if (span) span.textContent = 'Plan my week';
   }
   
-  // 2. Hide the warning banner above the calendar
+  // Hide the warning banner above the calendar.
   const banner = document.getElementById('calendar-sync-warning-banner');
   if (banner) {
     banner.style.display = 'none';
@@ -178,7 +208,7 @@ const tMm = String(initialToday.getMonth() + 1).padStart(2, '0');
 const tDd = String(initialToday.getDate()).padStart(2, '0');
 activeDayDateString = `${tYyyy}-${tMm}-${tDd}`;
 
-let activeTimelineSegment = 'grid'; // 'grid' or 'agenda'
+let activeTimelineSegment = 'agenda'; // 'grid' or 'agenda'
 
 // Bootstrapping events listeners
 window.addEventListener('DOMContentLoaded', async () => {
@@ -215,10 +245,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     renderDynamicWeekDays();
   }
 
-  // 3. Automatically run scheduler optimization on landing page load (silently)
-  await triggerSchedulerOptimization(true);
+  if (isAutoSolve) {
+    await triggerSchedulerOptimization(true);
+  } else {
+    renderDashboardSummary();
+  }
 
-  // 4. Attach HTML5 Drag-and-Drop listener to the calendar canvas
+  // Attach HTML5 Drag-and-Drop listener to the calendar canvas.
   const canvas = document.getElementById('chrono-timeline-canvas');
   if (canvas) {
     canvas.addEventListener('dragover', (e) => {
@@ -388,21 +421,16 @@ async function fetchServerInputs() {
       // Scan and archive any ended/expired tasks right away
       const didArchiveOnLoad = scanAndArchiveEndedTasks();
       if (didArchiveOnLoad) {
-        const payload = buildOptimizationPayload();
-        fetch('/run', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(payload)
-        });
+        queueInputSave();
       }
       
-      showSpringToast('Connected to database. Synced configurations.');
+      renderDashboardSummary();
     } else {
-      showSpringToast('Failed to load server inputs. Standalone mode initialized.', 'error');
+      showSpringToast('Failed to load saved planner data.', 'error');
     }
   } catch (err) {
     console.error("fetchServerInputs error", err);
-    showSpringToast('Offline. Spawning standard sandbox database.', 'error');
+    showSpringToast('Could not connect to saved planner data.', 'error');
   }
 
   // Draw docks card list cards
@@ -416,9 +444,11 @@ async function triggerSchedulerOptimization(silent = false) {
   
   btn.disabled = true;
   btn.style.opacity = '0.75';
-  btn.querySelector('span').textContent = 'Solving Equations...';
-  icon.setAttribute('data-lucide', 'loader-2');
-  icon.classList.add('loading-spinner-spin');
+  btn.querySelector('span').textContent = 'Planning...';
+  if (icon) {
+    icon.setAttribute('data-lucide', 'loader-2');
+    icon.classList.add('loading-spinner-spin');
+  }
   lucide.createIcons();
 
   // Save a backup of input fields right before running the solver, if not reverting
@@ -429,10 +459,7 @@ async function triggerSchedulerOptimization(silent = false) {
   // Retain a copy of the prior schedule to compare start-end time differences
   const priorSchedule = scheduleOutput ? JSON.parse(JSON.stringify(scheduleOutput.schedule || [])) : [];
 
-  // Fake C++ console logging startup (PHASE 10)
-  if (typeof startFakeCppCompilerStream === 'function') {
-    startFakeCppCompilerStream();
-  }
+
 
   const payload = buildOptimizationPayload();
 
@@ -489,9 +516,9 @@ async function triggerSchedulerOptimization(silent = false) {
         return;
       }
       
-      // Only show success toast if user manually clicked optimize or sync (not silent)
+      // Only show success toast if user manually clicked plan or sync (not silent).
       if (!silent) {
-        showSpringToast('Optimization completed successfully!');
+        showSpringToast('Your week is planned.');
       }
       
       // Calculate schedule differences (diff-like log) for live demonstration
@@ -510,14 +537,14 @@ async function triggerSchedulerOptimization(silent = false) {
             // Task newly scheduled
             const logLine = document.createElement('div');
             logLine.style.color = 'var(--neon-cyan)';
-            logLine.innerHTML = `<span style="color: var(--neon-emerald); font-weight:700;">+ [NEW]</span> "${escapeHtml(newSeg.task_name)}" scheduled to <span style="font-weight:700;">${formatTimeClock(new Date(newSeg.start))}-${formatTimeClock(new Date(newSeg.end))}</span>`;
+            logLine.innerHTML = `<span style="color: var(--neon-emerald); font-weight:700;">+ Planned</span> "${escapeHtml(newSeg.task_name)}" at <span style="font-weight:700;">${formatTimeClock(new Date(newSeg.start))}-${formatTimeClock(new Date(newSeg.end))}</span>`;
             diffContainer.appendChild(logLine);
             changeCount++;
           } else if (oldSeg.start !== newSeg.start || oldSeg.end !== newSeg.end) {
             // Task rescheduled to different hours
             const logLine = document.createElement('div');
-            logLine.style.color = '#fbbf24'; // Warning color
-            logLine.innerHTML = `<span style="color: #fbbf24; font-weight:700;">~ [MOVED]</span> "${escapeHtml(newSeg.task_name)}" shifted: <span style="text-decoration: line-through; opacity: 0.6;">${formatTimeClock(new Date(oldSeg.start))}</span> ➔ <span style="font-weight:700; color: #fff;">${formatTimeClock(new Date(newSeg.start))}-${formatTimeClock(new Date(newSeg.end))}</span>`;
+            logLine.style.color = '#a66b2f';
+            logLine.innerHTML = `<span style="color: #a66b2f; font-weight:700;">~ Moved</span> "${escapeHtml(newSeg.task_name)}" from <span style="text-decoration: line-through; opacity: 0.6;">${formatTimeClock(new Date(oldSeg.start))}</span> to <span style="font-weight:700;">${formatTimeClock(new Date(newSeg.start))}-${formatTimeClock(new Date(newSeg.end))}</span>`;
             diffContainer.appendChild(logLine);
             changeCount++;
           }
@@ -529,14 +556,14 @@ async function triggerSchedulerOptimization(silent = false) {
           if (!stillScheduled) {
             const logLine = document.createElement('div');
             logLine.style.color = 'var(--neon-rose)';
-            logLine.innerHTML = `<span style="color: var(--neon-rose); font-weight:700;">- [REMOVED]</span> "${escapeHtml(oldSeg.task_name)}" was unscheduled`;
+            logLine.innerHTML = `<span style="color: var(--neon-rose); font-weight:700;">- Removed</span> "${escapeHtml(oldSeg.task_name)}" is no longer planned`;
             diffContainer.appendChild(logLine);
             changeCount++;
           }
         });
         
         if (changeCount === 0) {
-          diffContainer.innerHTML = '<span style="color: var(--text-muted);">No time changes. Schedule remains optimal.</span>';
+          diffContainer.innerHTML = '<span style="color: var(--text-muted);">No time changes. Your current schedule still fits.</span>';
         }
       }
       
@@ -546,7 +573,7 @@ async function triggerSchedulerOptimization(silent = false) {
       // Update charts & timeline chrono grids
       renderMainMetricsDashboard();
     } else {
-      showSpringToast('Engine failure: ' + data.error, 'error');
+      showSpringToast('Planning failed: ' + data.error, 'error');
       lastSolverError = data.error;
       syncStateToVisualDocks();
       if (backupTasks && backupTasks.length > 0) {
@@ -558,12 +585,12 @@ async function triggerSchedulerOptimization(silent = false) {
         if (typeof renderTimelineView === 'function') {
           renderTimelineView();
         }
-        showSpringToast('Reverted manual allocation due to engine failure.', 'warning');
+        showSpringToast('Reverted the last manual schedule change.', 'warning');
       }
     }
   } catch (err) {
     console.error(err);
-    showSpringToast('Network connection lost. C++ backend unreachable.', 'error');
+    showSpringToast('Could not reach the scheduler.', 'error');
     lastSolverError = err.message;
     syncStateToVisualDocks();
     if (backupTasks && backupTasks.length > 0) {
@@ -579,48 +606,253 @@ async function triggerSchedulerOptimization(silent = false) {
   } finally {
     btn.disabled = false;
     btn.style.opacity = '1';
-    btn.querySelector('span').textContent = 'Run Optimizer';
-    icon.setAttribute('data-lucide', 'zap');
-    icon.classList.remove('loading-spinner-spin');
+    btn.querySelector('span').textContent = 'Plan my week';
+    if (icon) {
+      icon.setAttribute('data-lucide', 'sparkles');
+      icon.classList.remove('loading-spinner-spin');
+    }
     lucide.createIcons();
-
   }
 }
 
-// Bi-directional payload sync: Developer Console -> GUI
-async function commitJsonEditsToGUI() {
-  try {
-    const tVal = document.getElementById('dev-textarea-tasks').value.trim();
-    const aVal = document.getElementById('dev-textarea-availability').value.trim();
-    const fVal = document.getElementById('dev-textarea-fixed').value.trim();
 
-    tasks = tVal ? JSON.parse(tVal) : [];
-    availability = aVal ? JSON.parse(aVal) : [];
-    fixedEvents = fVal ? JSON.parse(fVal) : [];
 
-    syncStateToVisualDocks();
-    showSpringToast('Developer console changes loaded into memory.');
-    await triggerSchedulerOptimization();
-  } catch (err) {
-    showSpringToast('Syntax Error! Invalid JSON payload. ' + err.message, 'error');
+function renderDashboardSummary() {
+  renderTodayTasksSummary();
+  renderUpcomingDeadlinesSummary();
+  renderWeeklyPreviewSummary();
+  renderScheduleExplanations();
+  renderPlannerResultNote();
+}
+
+function renderPlannerHeaderCopy() {
+  const weekEl = document.getElementById('planner-week-range');
+  if (weekEl && typeof activeWeekStartDate !== 'undefined') {
+    const weekStart = new Date(activeWeekStartDate.getTime());
+    const weekEnd = new Date(activeWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+    const startLabel = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const endLabel = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    weekEl.textContent = `${startLabel} - ${endLabel}`;
   }
 }
 
-// Beautify and pretty-print JSON arrays in the Developer console
-function beautifyAllDeveloperJson() {
-  try {
-    const tArea = document.getElementById('dev-textarea-tasks');
-    const aArea = document.getElementById('dev-textarea-availability');
-    const fArea = document.getElementById('dev-textarea-fixed');
+function isSameLocalDay(a, b) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate();
+}
 
-    if (tArea && tArea.value.trim()) tArea.value = JSON.stringify(JSON.parse(tArea.value), null, 2);
-    if (aArea && aArea.value.trim()) aArea.value = JSON.stringify(JSON.parse(aArea.value), null, 2);
-    if (fArea && fArea.value.trim()) fArea.value = JSON.stringify(JSON.parse(fArea.value), null, 2);
+function formatShortDayLabel(dateObj) {
+  return dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
 
-    showSpringToast('Beautified Developer JSON payloads.');
-  } catch (err) {
-    showSpringToast('Formatting Failed: Invalid JSON syntax. ' + err.message, 'error');
+function formatDashboardTimeRange(start, end) {
+  return `${formatTimeClock(new Date(start))}-${formatTimeClock(new Date(end))}`;
+}
+
+function renderTodayTasksSummary() {
+  const container = document.getElementById('dashboard-today-list');
+  if (!container) return;
+
+  const today = new Date();
+  const rows = [];
+
+  if (scheduleOutput && Array.isArray(scheduleOutput.schedule)) {
+    scheduleOutput.schedule.forEach(seg => {
+      const start = new Date(seg.start);
+      if (isSameLocalDay(start, today)) {
+        rows.push({
+          title: seg.task_name,
+          meta: `${formatDashboardTimeRange(seg.start, seg.end)} planned`,
+          sortDate: start
+        });
+      }
+    });
   }
+
+  fixedEvents.forEach(evt => {
+    const start = new Date(evt.start);
+    if (isSameLocalDay(start, today)) {
+      rows.push({
+        title: evt.name,
+        meta: `${formatDashboardTimeRange(evt.start, evt.end)} fixed`,
+        sortDate: start
+      });
+    }
+  });
+
+  tasks.forEach(task => {
+    const deadline = new Date(task.deadline);
+    const alreadyShown = rows.some(row => row.title === task.name);
+    if (!alreadyShown && isSameLocalDay(deadline, today)) {
+      rows.push({
+        title: task.name,
+        meta: `Due today at ${formatTimeClock(deadline)}`,
+        sortDate: deadline
+      });
+    }
+  });
+
+  rows.sort((a, b) => a.sortDate - b.sortDate);
+
+  if (rows.length === 0) {
+    container.innerHTML = tasks.length === 0
+      ? '<div class="empty-state">No schedule yet. Add tasks and availability to get started.</div>'
+      : '<div class="empty-state">Nothing on today\'s plan yet.</div>';
+    return;
+  }
+
+  container.innerHTML = rows.slice(0, 6).map(row => `
+    <div class="summary-row">
+      <strong>${escapeHtml(row.title)}</strong>
+      <span>${escapeHtml(row.meta)}</span>
+    </div>
+  `).join('');
+}
+
+function renderUpcomingDeadlinesSummary() {
+  const container = document.getElementById('dashboard-deadlines-list');
+  if (!container) return;
+
+  const now = new Date();
+  const upcoming = tasks
+    .filter(task => task.deadline && new Date(task.deadline) >= now)
+    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+    .slice(0, 5);
+
+  if (upcoming.length === 0) {
+    container.innerHTML = '<div class="empty-state">No deadlines coming up. Add a due date when you create a task.</div>';
+    return;
+  }
+
+  container.innerHTML = upcoming.map(task => {
+    const deadline = new Date(task.deadline);
+    return `
+      <div class="summary-row">
+        <strong>${escapeHtml(task.name)}</strong>
+        <span>${formatShortDayLabel(deadline)} at ${formatTimeClock(deadline)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderWeeklyPreviewSummary() {
+  const container = document.getElementById('dashboard-week-preview');
+  if (!container) return;
+
+  if (!scheduleOutput || !Array.isArray(scheduleOutput.schedule) || scheduleOutput.schedule.length === 0) {
+    container.innerHTML = '<div class="empty-state">Your weekly preview will appear after planning.</div>';
+    return;
+  }
+
+  const dayTotals = new Map();
+  scheduleOutput.schedule.forEach(seg => {
+    const start = new Date(seg.start);
+    const key = start.toISOString().substring(0, 10);
+    const current = dayTotals.get(key) || { date: start, minutes: 0, count: 0 };
+    current.minutes += Math.max(0, (new Date(seg.end) - start) / (1000 * 60));
+    current.count += 1;
+    dayTotals.set(key, current);
+  });
+
+  const rows = Array.from(dayTotals.values())
+    .sort((a, b) => a.date - b.date)
+    .slice(0, 7);
+
+  container.innerHTML = rows.map(row => {
+    const hours = row.minutes >= 60
+      ? `${Math.floor(row.minutes / 60)}h ${Math.round(row.minutes % 60)}m`
+      : `${Math.round(row.minutes)}m`;
+    return `
+      <div class="week-preview-row">
+        <strong>${formatShortDayLabel(row.date)}</strong>
+        <span>${hours} across ${row.count} item${row.count === 1 ? '' : 's'}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderScheduleExplanations() {
+  const container = document.getElementById('schedule-explanation-list');
+  if (!container) return;
+
+  if (!scheduleOutput || !Array.isArray(scheduleOutput.schedule) || scheduleOutput.schedule.length === 0) {
+    container.innerHTML = '<div class="empty-state">Plan your week to see why each block landed where it did.</div>';
+    return;
+  }
+
+  function formatReasonList(reasons) {
+    if (reasons.length === 1) return reasons[0];
+    if (reasons.length === 2) return `${reasons[0]} and ${reasons[1]}`;
+    return `${reasons.slice(0, -1).join(', ')}, and ${reasons[reasons.length - 1]}`;
+  }
+
+  const seenTaskIds = new Set();
+  const segments = [...scheduleOutput.schedule].sort((a, b) => new Date(a.start) - new Date(b.start));
+  const explanations = [];
+
+  segments.forEach(seg => {
+    if (seenTaskIds.has(seg.task_id) || explanations.length >= 6) return;
+    seenTaskIds.add(seg.task_id);
+    const task = tasks.find(t => String(t.id) === String(seg.task_id));
+    const start = new Date(seg.start);
+    const reasons = [];
+
+    if (task && task.priority >= 4) {
+      reasons.push('it is high priority');
+    }
+
+    if (task && task.deadline) {
+      const hoursUntilDeadline = (new Date(task.deadline) - start) / (1000 * 60 * 60);
+      if (hoursUntilDeadline <= 48) {
+        reasons.push('it has a close deadline');
+      }
+    }
+
+    if (task && task.difficulty >= 4) {
+      reasons.push('it needs focused time');
+    }
+
+    const fitsAvailability = availability.some(avail => {
+      const availStart = new Date(avail.start);
+      const availEnd = new Date(avail.end);
+      return availStart <= start && new Date(seg.end) <= availEnd;
+    });
+    if (fitsAvailability) {
+      reasons.push('it fits inside your available hours');
+    }
+
+    const reasonText = reasons.length > 0
+      ? `Placed here because ${formatReasonList(reasons)}.`
+      : 'Placed in the earliest open time that avoided fixed events.';
+
+    explanations.push(`
+      <div class="explanation-item">
+        <strong>${escapeHtml(seg.task_name)}</strong>
+        <span>${reasonText}</span>
+      </div>
+    `);
+  });
+
+  container.innerHTML = explanations.join('');
+}
+
+function renderPlannerResultNote() {
+  const note = document.getElementById('dashboard-plan-note');
+  if (!note) return;
+
+  if (!scheduleOutput || !scheduleOutput.statistics) {
+    note.textContent = 'Plan your week to see a short recap here.';
+    return;
+  }
+
+  const stats = scheduleOutput.statistics;
+  const scheduled = stats.scheduled_tasks || 0;
+  const total = stats.total_tasks || tasks.length;
+  const unscheduled = Math.max(0, total - scheduled);
+  note.textContent = unscheduled > 0
+    ? `${scheduled} of ${total} tasks were placed. ${unscheduled} still need time.`
+    : `${scheduled} of ${total} tasks were placed for this week.`;
 }
 
 // Re-render visual list cards in sidebar docks
@@ -635,7 +867,7 @@ function syncStateToVisualDocks() {
   tViewport.innerHTML = '';
   
   if (tasks.length === 0) {
-    tViewport.innerHTML = '<div class="empty-state">No tasks created yet. Click +</div>';
+    tViewport.innerHTML = '<div class="empty-state">No tasks yet. Add your first task.</div>';
   } else {
     tasks.forEach((task, idx) => {
       const card = document.createElement('div');
@@ -653,7 +885,7 @@ function syncStateToVisualDocks() {
 
       let priorityStars = '';
       for (let s = 1; s <= 5; s++) {
-        priorityStars += s <= task.priority ? '★' : '☆';
+        priorityStars += s <= task.priority ? '*' : '-';
       }
 
       // Compute checklist progress if subtasks checklists exist
@@ -701,8 +933,8 @@ function syncStateToVisualDocks() {
               <div class="hud-diff-track"><div class="hud-diff-fill" style="width:${task.difficulty * 20}%"></div></div>
             </div>
           </span>
-          ${task.can_split ? '<span class="badge-hud p-cyan">Splittable</span>' : '<span class="badge-hud" style="color:var(--text-muted);">Unsplittable</span>'}
-          ${task.dependencies.length > 0 ? `<span class="badge-hud" title="Dependencies: ${escapeHtml(depsNames)}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><i data-lucide="git-merge" style="width:10px;"></i> ${task.dependencies.length} reqs</span>` : ''}
+          ${task.can_split ? '<span class="badge-hud p-cyan">Can split</span>' : '<span class="badge-hud" style="color:var(--text-muted);">One block</span>'}
+          ${task.dependencies.length > 0 ? `<span class="badge-hud" title="Depends on: ${escapeHtml(depsNames)}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><i data-lucide="git-merge" style="width:10px;"></i> ${task.dependencies.length} before</span>` : ''}
         </div>
         
         ${checklistHtml}
@@ -723,8 +955,8 @@ function syncStateToVisualDocks() {
               <div style="font-size:10px; color:${isInside ? 'var(--neon-orange)' : 'var(--neon-rose)'}; display:flex; align-items:flex-start; gap:5px; margin-top:4px; font-weight:700;">
                 <i data-lucide="${isInside ? 'lock' : 'alert-triangle'}" style="width:11px; color:${isInside ? 'var(--neon-orange)' : 'var(--neon-rose)'}; margin-top:2px;"></i>
                 <div>
-                  <span>Locked Allocation${isInside ? '' : ' (Outside Avail)'}:</span><br>
-                  <span style="color:#fff; font-weight:500; ${isInside ? '' : 'text-decoration: underline wavy var(--neon-rose);'}">${formatDateLabel(task.fixed_start)} - ${formatTimeClock(new Date(task.fixed_end))}</span>
+                  <span>Pinned time${isInside ? '' : ' (outside availability)'}:</span><br>
+                  <span style="font-weight:500; ${isInside ? '' : 'text-decoration: underline wavy var(--neon-rose);'}">${formatDateLabel(task.fixed_start)} - ${formatTimeClock(new Date(task.fixed_end))}</span>
                 </div>
               </div>
             `;
@@ -740,7 +972,7 @@ function syncStateToVisualDocks() {
                   const availEnd = new Date(avail.end);
                   return (availStart <= segStart && segEnd <= availEnd);
                 });
-                return `<span style="color:#fff; font-weight:500; ${isSegInside ? '' : 'text-decoration: underline wavy var(--neon-rose);'}">${formatDateLabel(seg.start)} - ${formatTimeClock(new Date(seg.end))} ${isSegInside ? '' : '(Outside Avail)'}</span>`;
+                return `<span style="font-weight:500; ${isSegInside ? '' : 'text-decoration: underline wavy var(--neon-rose);'}">${formatDateLabel(seg.start)} - ${formatTimeClock(new Date(seg.end))} ${isSegInside ? '' : '(outside availability)'}</span>`;
               }).join('<br>');
               
               const allInside = segments.every(seg => {
@@ -757,7 +989,7 @@ function syncStateToVisualDocks() {
                 <div style="font-size:10px; color:${allInside ? 'var(--neon-emerald)' : 'var(--neon-rose)'}; display:flex; align-items:flex-start; gap:5px; margin-top:4px; font-weight:700;">
                   <i data-lucide="${allInside ? 'calendar' : 'alert-triangle'}" style="width:11px; color:${allInside ? 'var(--neon-emerald)' : 'var(--neon-rose)'}; margin-top:2px;"></i>
                   <div>
-                    <span>Optimized Allocation:</span><br>
+                    <span>Planned time:</span><br>
                     ${timeRanges}
                   </div>
                 </div>
@@ -765,7 +997,7 @@ function syncStateToVisualDocks() {
             } else {
               return `
                 <div style="font-size:10px; color:var(--neon-rose); display:flex; align-items:center; gap:5px; margin-top:4px; font-weight:700;">
-                  <i data-lucide="alert-circle" style="width:11px; color:var(--neon-rose);"></i> Unscheduled (No fit)
+                  <i data-lucide="alert-circle" style="width:11px; color:var(--neon-rose);"></i> Not planned yet
                 </div>
               `;
             }
@@ -782,21 +1014,21 @@ function syncStateToVisualDocks() {
   aViewport.innerHTML = '';
   
   if (availability.length === 0) {
-    aViewport.innerHTML = '<div class="empty-state">No active available windows. Click +</div>';
+    aViewport.innerHTML = '<div class="empty-state">No availability added yet.</div>';
   } else {
     availability.forEach((avail, idx) => {
       const card = document.createElement('div');
       card.className = 'card-item';
       card.innerHTML = `
         <div class="card-item-top">
-          <div class="card-item-title" style="color:var(--neon-emerald);"><i data-lucide="unlock" style="width:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Available Frame</div>
+          <div class="card-item-title" style="color:var(--neon-emerald);"><i data-lucide="unlock" style="width:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Available time</div>
           <div class="card-item-actions">
-            <button class="card-action-btn delete" onclick="deleteAvailabilityNode(${idx})" title="Purge slot"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+            <button class="card-action-btn delete" onclick="deleteAvailabilityNode(${idx})" title="Delete availability"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
           </div>
         </div>
         <div class="card-badge-row">
           <span class="badge-hud p-emerald">${formatDateLabel(avail.start)}</span>
-          <span class="badge-hud" style="background:transparent; border:none; color:var(--text-muted);">➔</span>
+          <span class="badge-hud" style="background:transparent; border:none; color:var(--text-muted);">to</span>
           <span class="badge-hud p-emerald">${formatDateLabel(avail.end)}</span>
         </div>
       `;
@@ -809,7 +1041,7 @@ function syncStateToVisualDocks() {
   fViewport.innerHTML = '';
   
   if (fixedEvents.length === 0) {
-    fViewport.innerHTML = '<div class="empty-state">No locked commitments. Click +</div>';
+    fViewport.innerHTML = '<div class="empty-state">No fixed events yet.</div>';
   } else {
     fixedEvents.forEach((evt, idx) => {
       const card = document.createElement('div');
@@ -818,12 +1050,12 @@ function syncStateToVisualDocks() {
         <div class="card-item-top">
           <div class="card-item-title" style="color:var(--neon-orange);"><i data-lucide="lock" style="width:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> ${escapeHtml(evt.name)}</div>
           <div class="card-item-actions">
-            <button class="card-action-btn delete" onclick="deleteFixedNode(${idx})" title="Purge event"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+            <button class="card-action-btn delete" onclick="deleteFixedNode(${idx})" title="Delete event"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
           </div>
         </div>
         <div class="card-badge-row">
           <span class="badge-hud p-coral">${formatDateLabel(evt.start)}</span>
-          <span class="badge-hud" style="background:transparent; border:none; color:var(--text-muted);">➔</span>
+          <span class="badge-hud" style="background:transparent; border:none; color:var(--text-muted);">to</span>
           <span class="badge-hud p-coral">${formatDateLabel(evt.end)}</span>
         </div>
       `;
@@ -851,7 +1083,7 @@ function syncStateToVisualDocks() {
         
         let priorityStars = '';
         for (let s = 1; s <= 5; s++) {
-          priorityStars += s <= task.priority ? '★' : '☆';
+          priorityStars += s <= task.priority ? '*' : '-';
         }
 
         card.innerHTML = `
@@ -868,7 +1100,7 @@ function syncStateToVisualDocks() {
           </div>
           <div style="font-size:10px; color:var(--text-muted); display:flex; flex-direction:column; gap:2px; margin-top:6px;">
             <div style="display:flex; align-items:center; gap:5px;">
-              <i data-lucide="calendar" style="width:11px;"></i> ${(task.start && task.end) ? `Scheduled: ${formatDateLabel(task.start)} ➔ ${formatDateLabel(task.end)}` : `Expired: Deadline passed on ${formatDateLabel(task.deadline)}`}
+              <i data-lucide="calendar" style="width:11px;"></i> ${(task.start && task.end) ? `Scheduled: ${formatDateLabel(task.start)} to ${formatDateLabel(task.end)}` : `Expired: Deadline passed on ${formatDateLabel(task.deadline)}`}
             </div>
             <div style="display:flex; align-items:center; gap:5px; opacity:0.7;">
               <i data-lucide="archive" style="width:11px;"></i> Archived: ${formatDateLabel(task.archivedAt)}
@@ -880,15 +1112,7 @@ function syncStateToVisualDocks() {
     }
   }
 
-  // 4. DEV JSON console textareas values update
-  document.getElementById('dev-textarea-tasks').value = JSON.stringify(tasks, null, 2);
-  document.getElementById('dev-textarea-availability').value = JSON.stringify(availability, null, 2);
-  document.getElementById('dev-textarea-fixed').value = JSON.stringify(fixedEvents, null, 2);
-  
-  const outArea = document.getElementById('dev-textarea-output');
-  if (outArea) {
-    outArea.value = scheduleOutput ? JSON.stringify(scheduleOutput, null, 2) : '';
-  }
+
 
   // 3.8. Render Troubleshooter Warning Hub
   const troublePanel = document.getElementById('danger-alert-dock');
@@ -943,16 +1167,16 @@ function syncStateToVisualDocks() {
       troublePanel.style.display = 'flex';
       troublePanel.innerHTML = `
         <div class="danger-title" style="display:flex; align-items:center; gap:8px;">
-          <i data-lucide="alert-triangle" style="color:var(--neon-rose);"></i> System Optimization & Conflict Alerts (${totalAlerts} issues detected)
+          <i data-lucide="alert-triangle" style="color:var(--danger);"></i> Needs a decision (${totalAlerts})
         </div>
         <div style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
-          Issues detected with task scheduling. Drag tasks into green available slots, enlarge available windows, or extend deadlines.
+          A few tasks still need room. Add availability, extend a deadline, or move a pinned task into available time.
         </div>
         <div class="danger-items-grid">
           ${lastSolverError ? `
             <div class="danger-item-card" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 8px; border-left: 4px solid var(--neon-rose); grid-column: span 2;">
               <div>
-                <strong style="color: var(--neon-rose);">C++ Optimization Engine Failure</strong>
+                <strong style="color: var(--neon-rose);">Scheduler error</strong>
                 <span style="color:#fda4af; display: block; font-size: 11.5px; margin-top: 4px; font-family: 'JetBrains Mono', monospace;"><i data-lucide="alert-circle" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Error: ${escapeHtml(lastSolverError)}</span>
               </div>
             </div>
@@ -961,10 +1185,10 @@ function syncStateToVisualDocks() {
             <div class="danger-item-card" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 8px; border-left: 4px solid var(--neon-rose);">
               <div>
                 <strong>${escapeHtml(item.task_name)}</strong>
-                <span style="color:#fda4af; display: block; font-size: 11.5px; margin-top: 4px;"><i data-lucide="alert-circle" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Unscheduled: ${escapeHtml(item.reason)}</span>
+                <span style="color:#b5534b; display: block; font-size: 11.5px; margin-top: 4px;"><i data-lucide="alert-circle" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Not planned: ${escapeHtml(item.reason)}</span>
               </div>
               <button class="btn-action-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--neon-cyan); color: var(--neon-cyan); align-self: flex-end; display: flex; align-items: center; gap: 4px; border-radius: 6px; box-shadow: none;" onclick="launchFixProblemModal(${item.task_id}, \`${escapeHtml(item.reason)}\`)" title="Resolve this conflict">
-                <i data-lucide="wrench" style="width: 12px; height: 12px;"></i> Fix Problem
+                <i data-lucide="wrench" style="width: 12px; height: 12px;"></i> Help it fit
               </button>
             </div>
           `).join('')}
@@ -972,10 +1196,10 @@ function syncStateToVisualDocks() {
             <div class="danger-item-card" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 8px; border-left: 4px solid var(--neon-orange);">
               <div>
                 <strong>${escapeHtml(item.task_name)}</strong>
-                <span style="color:#fdba74; display: block; font-size: 11.5px; margin-top: 4px;"><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Outside Availability: ${escapeHtml(item.reason)}</span>
+                <span style="color:#a66b2f; display: block; font-size: 11.5px; margin-top: 4px;"><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Outside availability: ${escapeHtml(item.reason)}</span>
               </div>
               <button class="btn-action-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--neon-cyan); color: var(--neon-cyan); align-self: flex-end; display: flex; align-items: center; gap: 4px; border-radius: 6px; box-shadow: none;" onclick="launchFixProblemModal(${item.task_id}, \`${escapeHtml(item.reason)}\`)" title="Resolve this conflict">
-                <i data-lucide="wrench" style="width: 12px; height: 12px;"></i> Fix Problem
+                <i data-lucide="wrench" style="width: 12px; height: 12px;"></i> Help it fit
               </button>
             </div>
           `).join('')}
@@ -986,6 +1210,7 @@ function syncStateToVisualDocks() {
     }
   }
 
+  renderDashboardSummary();
   lucide.createIcons();
   
   // Calculate load density indicators under week selector bar
@@ -1000,7 +1225,7 @@ async function toggleSubtaskCheckNode(taskIdx, subtaskIdx, event) {
   tasks[taskIdx].subtasks[subtaskIdx].completed = !tasks[taskIdx].subtasks[subtaskIdx].completed;
   
   syncStateToVisualDocks();
-  showSpringToast('Sub-task checkbox checklist marked.');
+    showSpringToast('Subtask updated.');
   
   // Automatically trigger schedule solver
   if (isAutoSolve) {
@@ -1057,7 +1282,7 @@ function switchDockTab(paneId) {
   
   // Find button containing onclick action
   const activeBtn = Array.from(document.querySelectorAll('.dock-tab-btn'))
-                         .find(btn => btn.getAttribute('onclick').includes(paneId));
+                         .find(btn => (btn.getAttribute('onclick') || '').includes(paneId));
   if (activeBtn) activeBtn.classList.add('active');
   
   const pane = document.getElementById(paneId);
@@ -1171,3 +1396,4 @@ function deleteEndedTaskNode(idx) {
   }
   showSpringToast("Archived task deleted.");
 }
+

@@ -11,8 +11,13 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function initAnalyticsCharts() {
-  const densityCtx = document.getElementById('chart-density-workload').getContext('2d');
-  const radarCtx = document.getElementById('chart-radar-cognitive').getContext('2d');
+  if (typeof Chart === 'undefined') return;
+  const densityCanvas = document.getElementById('chart-density-workload');
+  const radarCanvas = document.getElementById('chart-radar-cognitive');
+  if (!densityCanvas || !radarCanvas) return;
+
+  const densityCtx = densityCanvas.getContext('2d');
+  const radarCtx = radarCanvas.getContext('2d');
 
   const themeAccent = getThemeColorToken('--neon-accent') || '#a855f7';
   const themeCyan = getThemeColorToken('--neon-cyan') || '#06b6d4';
@@ -39,8 +44,8 @@ function initAnalyticsCharts() {
         legend: { display: false },
         tooltip: {
           backgroundColor: 'rgba(5, 2, 14, 0.95)',
-          titleFont: { family: 'Outfit', size: 12 },
-          bodyFont: { family: 'Plus Jakarta Sans', size: 11 },
+          titleFont: { family: 'Source Sans 3', size: 12 },
+          bodyFont: { family: 'Source Sans 3', size: 11 },
           borderColor: themeAccent,
           borderWidth: 1
         }
@@ -48,23 +53,23 @@ function initAnalyticsCharts() {
       scales: {
         y: {
           grid: { color: getThemeColorToken('--chart-grid') || 'rgba(255, 255, 255, 0.03)' },
-          ticks: { color: getThemeColorToken('--chart-text') || '#64748b', font: { family: 'Outfit', size: 10 } }
+          ticks: { color: getThemeColorToken('--chart-text') || '#64748b', font: { family: 'Source Sans 3', size: 10 } }
         },
         x: {
           grid: { display: false },
-          ticks: { color: getThemeColorToken('--chart-text') || '#64748b', font: { family: 'Outfit', size: 10 } }
+          ticks: { color: getThemeColorToken('--chart-text') || '#64748b', font: { family: 'Source Sans 3', size: 10 } }
         }
       }
     }
   });
 
-  // 2. Radar Cognitive Mapping Load Chart
+  // 2. Selected day workload chart
   cognitiveChart = new Chart(radarCtx, {
     type: 'radar',
     data: {
-      labels: ['Task ID', 'Priority', 'Difficulty', 'Duration', 'Splits'],
+      labels: ['Tasks', 'Priority', 'Difficulty', 'Hours', 'Split blocks'],
       datasets: [{
-        label: 'Selected Day Focus Map',
+        label: 'Selected day workload',
         data: [0, 0, 0, 0, 0],
         backgroundColor: themeCyan + '22',
         borderColor: themeCyan,
@@ -82,8 +87,8 @@ function initAnalyticsCharts() {
         legend: { display: false },
         tooltip: {
           backgroundColor: 'rgba(5, 2, 14, 0.95)',
-          titleFont: { family: 'Outfit', size: 11 },
-          bodyFont: { family: 'Plus Jakarta Sans', size: 11 },
+          titleFont: { family: 'Source Sans 3', size: 11 },
+          bodyFont: { family: 'Source Sans 3', size: 11 },
           borderColor: themeCyan,
           borderWidth: 1
         }
@@ -92,7 +97,7 @@ function initAnalyticsCharts() {
         r: {
           grid: { color: getThemeColorToken('--chart-grid') || 'rgba(255, 255, 255, 0.04)' },
           angleLines: { color: getThemeColorToken('--chart-grid') || 'rgba(255, 255, 255, 0.04)' },
-          pointLabels: { color: getThemeColorToken('--chart-text') || '#64748b', font: { family: 'Outfit', size: 9, weight: '700' } },
+          pointLabels: { color: getThemeColorToken('--chart-text') || '#64748b', font: { family: 'Source Sans 3', size: 9, weight: '700' } },
           ticks: { display: false }
         }
       }
@@ -108,7 +113,9 @@ function renderMainMetricsDashboard() {
   
   // Real-time numeric counting animation for Score
   const scoreEl = document.getElementById('stat-score-val');
-  animateNumericCounter(scoreEl, parseInt(scoreEl.textContent) || 0, stats.score || 0);
+  if (scoreEl) {
+    animateNumericCounter(scoreEl, parseInt(scoreEl.textContent) || 0, stats.score || 0);
+  }
 
   const scheduledCount = stats.scheduled_tasks || 0;
   const totalCount = stats.total_tasks || 0;
@@ -116,7 +123,8 @@ function renderMainMetricsDashboard() {
   const violations = stats.deadline_violations || 0;
 
   const efficiencyPercent = totalCount > 0 ? Math.round((scheduledCount / totalCount) * 100) : 0;
-  document.getElementById('stat-efficiency-val').textContent = efficiencyPercent + '%';
+  const efficiencyEl = document.getElementById('stat-efficiency-val');
+  if (efficiencyEl) efficiencyEl.textContent = efficiencyPercent + '%';
 
   // Ring stroke-dashoffset transition (length 238)
   const dialFill = document.getElementById('hud-gauge-fill');
@@ -134,7 +142,8 @@ function renderMainMetricsDashboard() {
     progressBarEl.style.width = progressPercent + '%';
   }
 
-  document.getElementById('stat-conflicts-val').textContent = conflicts + violations;
+  const conflictsEl = document.getElementById('stat-conflicts-val');
+  if (conflictsEl) conflictsEl.textContent = conflicts + violations;
 
   // Update Chart.js datasets
   recalculateChartsData();
@@ -146,6 +155,10 @@ function renderMainMetricsDashboard() {
   
   if (typeof updateWeekDensityDotCounters === 'function') {
     updateWeekDensityDotCounters();
+  }
+
+  if (typeof renderDashboardSummary === 'function') {
+    renderDashboardSummary();
   }
 
   lucide.createIcons();

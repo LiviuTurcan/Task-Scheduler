@@ -10,11 +10,5 @@
     "id": 102,
     "name": "Calculus Seminar",
     "start": "2026-06-10T13:00:00"
-  },
-  {
-    "end": "2026-06-11T16:00:00",
-    "id": 103,
-    "name": "Client Demo Meeting",
-    "start": "2026-06-11T15:00:00"
   }
 ]

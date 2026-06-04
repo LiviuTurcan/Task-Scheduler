@@ -1,12 +1,61 @@
 {
   "generated_by": "cpp_engine",
-  "schedule": [],
+  "schedule": [
+    {
+      "deadline": "2026-06-10T18:00:00",
+      "end": "2026-06-08T10:00:00",
+      "priority": 4,
+      "start": "2026-06-08T09:00:00",
+      "task_id": 1,
+      "task_name": "Prepare Presentation"
+    },
+    {
+      "deadline": "2026-06-10T18:00:00",
+      "end": "2026-06-08T12:00:00",
+      "priority": 4,
+      "start": "2026-06-08T11:00:00",
+      "task_id": 1,
+      "task_name": "Prepare Presentation"
+    },
+    {
+      "deadline": "2026-06-12T17:00:00",
+      "end": "2026-06-08T15:00:00",
+      "priority": 5,
+      "start": "2026-06-08T12:00:00",
+      "task_id": 2,
+      "task_name": "Report Submission"
+    },
+    {
+      "deadline": "2026-06-14T20:00:00",
+      "end": "2026-06-08T16:30:00",
+      "priority": 3,
+      "start": "2026-06-08T15:00:00",
+      "task_id": 3,
+      "task_name": "Math Homework Assignment"
+    },
+    {
+      "deadline": "2026-06-11T16:00:00",
+      "end": "2026-06-08T17:30:00",
+      "priority": 3,
+      "start": "2026-06-08T16:30:00",
+      "task_id": 5,
+      "task_name": "Code Review & Push"
+    },
+    {
+      "deadline": "2026-06-13T19:00:00",
+      "end": "2026-06-09T13:00:00",
+      "priority": 4,
+      "start": "2026-06-09T09:00:00",
+      "task_id": 4,
+      "task_name": "Figma UI Prototyping"
+    }
+  ],
   "statistics": {
     "conflicts": 0,
     "deadline_violations": 0,
-    "scheduled_tasks": 0,
-    "score": 0,
-    "total_tasks": 0,
+    "scheduled_tasks": 5,
+    "score": 1900,
+    "total_tasks": 5,
     "unscheduled_tasks": 0
   },
   "unscheduled_tasks": []

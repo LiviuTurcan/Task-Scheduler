@@ -46,6 +46,21 @@ def get_inputs():
         return jsonify({"success": False, "error": str(exc)}), 500
 
 
+@app.route("/inputs", methods=("POST",))
+def save_inputs():
+    payload = request.get_json(silent=True) or {}
+    controller = AppController()
+    try:
+        current_tasks, current_availability, current_fixed = controller.load_inputs()
+        tasks = payload.get("tasks", current_tasks)
+        availability = payload.get("availability", current_availability)
+        fixed_events = payload.get("fixed_events", current_fixed)
+        controller.save_inputs(tasks, availability, fixed_events)
+        return jsonify({"success": True})
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
 @app.route("/run", methods=("POST",))
 def run():
     payload = request.get_json(silent=True) or {}

@@ -19,14 +19,30 @@ function toggleFormTaskFixed(checked) {
   }
 }
 
+function formatLocalDateTimeInput(dateObj) {
+  const yyyy = dateObj.getFullYear();
+  const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const dd = String(dateObj.getDate()).padStart(2, '0');
+  const hh = String(dateObj.getHours()).padStart(2, '0');
+  const min = String(dateObj.getMinutes()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+}
+
+function defaultDateTimeInput(offsetDays, hour, minute = 0) {
+  const dateObj = new Date();
+  dateObj.setDate(dateObj.getDate() + offsetDays);
+  dateObj.setHours(hour, minute, 0, 0);
+  return formatLocalDateTimeInput(dateObj);
+}
+
 // 1. Tasks Popups CRUD
 function launchAddTaskModal() {
   document.getElementById('form-task-index').value = '';
-  document.getElementById('hud-task-modal-header').innerHTML = `<i data-lucide="plus-circle" style="color:var(--neon-purple-glow)"></i> Create Custom Task`;
+  document.getElementById('hud-task-modal-header').innerHTML = `<i data-lucide="plus-circle"></i> Add Task`;
 
   document.getElementById('form-task-name').value = '';
   document.getElementById('form-task-duration').value = '120';
-  document.getElementById('form-task-deadline').value = '2026-06-01T18:00';
+  document.getElementById('form-task-deadline').value = defaultDateTimeInput(3, 18);
   document.getElementById('form-task-priority').value = '3';
   document.getElementById('form-task-difficulty').value = '3';
   document.getElementById('form-task-split').checked = true;
@@ -50,7 +66,7 @@ function launchAddTaskModal() {
 function launchEditTaskModal(index) {
   const task = tasks[index];
   document.getElementById('form-task-index').value = index;
-  document.getElementById('hud-task-modal-header').innerHTML = `<i data-lucide="edit" style="color:var(--neon-purple-glow)"></i> Edit Task Details`;
+  document.getElementById('hud-task-modal-header').innerHTML = `<i data-lucide="edit"></i> Edit Task`;
 
   document.getElementById('form-task-name').value = task.name;
   document.getElementById('form-task-duration').value = task.duration_minutes;
@@ -162,13 +178,13 @@ async function commitTaskForm(e) {
     fixedStart = document.getElementById('form-task-fixed-start').value;
     fixedEnd = document.getElementById('form-task-fixed-end').value;
     if (!fixedStart || !fixedEnd) {
-      showSpringToast("Please provide both start and end datetimes for manual scheduling!", "error");
+      showSpringToast("Please provide both start and end times for the pinned slot.", "error");
       return;
     }
     if (fixedStart.length === 16) fixedStart += ":00";
     if (fixedEnd.length === 16) fixedEnd += ":00";
     if (new Date(fixedStart) >= new Date(fixedEnd)) {
-      showSpringToast("Locked End Datetime must be after Locked Start Datetime!", "error");
+      showSpringToast("Pinned end time must be after pinned start time.", "error");
       return;
     }
   }
@@ -204,7 +220,7 @@ async function commitTaskForm(e) {
       subtasks: subtasksList // Save subtasks array (PHASE 9)
     };
     tasks.push(newTask);
-    showSpringToast('Created new task successfully!');
+    showSpringToast('Task added.');
   } else {
     const idx = parseInt(indexVal);
     tasks[idx].name = name;
@@ -218,7 +234,7 @@ async function commitTaskForm(e) {
     tasks[idx].fixed_start = fixedStart;
     tasks[idx].fixed_end = fixedEnd;
     tasks[idx].subtasks = subtasksList; // Save subtasks array (PHASE 9)
-    showSpringToast('Updated task adjustments.');
+    showSpringToast('Task updated.');
   }
 
   dismissModal('modal-task-popup');
@@ -238,7 +254,7 @@ async function deleteTaskNode(index) {
     t.dependencies = t.dependencies.filter(id => id !== deletedId);
   });
 
-  showSpringToast('Deleted task successfully.');
+  showSpringToast('Task deleted.');
   syncStateToVisualDocks();
   if (isAutoSolve) {
     await triggerSchedulerOptimization(true);
@@ -250,8 +266,8 @@ async function deleteTaskNode(index) {
 // 2. Availability Popups CRUD
 function launchAddAvailabilityModal() {
   document.getElementById('form-availability-index').value = '';
-  document.getElementById('form-availability-start').value = '2026-06-01T09:00';
-  document.getElementById('form-availability-end').value = '2026-06-01T12:00';
+  document.getElementById('form-availability-start').value = defaultDateTimeInput(1, 9);
+  document.getElementById('form-availability-end').value = defaultDateTimeInput(1, 12);
   displayModal('modal-availability-popup');
 }
 
@@ -268,7 +284,7 @@ async function commitAvailabilityForm(e) {
   availability.sort((a,b) => new Date(a.start) - new Date(b.start));
 
   dismissModal('modal-availability-popup');
-  showSpringToast('Created available segment slot!');
+  showSpringToast('Availability added.');
   syncStateToVisualDocks();
   if (isAutoSolve) {
     await triggerSchedulerOptimization(true);
@@ -279,7 +295,7 @@ async function commitAvailabilityForm(e) {
 
 async function deleteAvailabilityNode(index) {
   availability.splice(index, 1);
-  showSpringToast('Removed available segment.');
+  showSpringToast('Availability removed.');
   syncStateToVisualDocks();
   if (isAutoSolve) {
     await triggerSchedulerOptimization(true);
@@ -292,8 +308,8 @@ async function deleteAvailabilityNode(index) {
 function launchAddFixedModal() {
   document.getElementById('form-fixed-index').value = '';
   document.getElementById('form-fixed-name').value = '';
-  document.getElementById('form-fixed-start').value = '2026-06-01T10:00';
-  document.getElementById('form-fixed-end').value = '2026-06-01T11:30';
+  document.getElementById('form-fixed-start').value = defaultDateTimeInput(1, 10);
+  document.getElementById('form-fixed-end').value = defaultDateTimeInput(1, 11, 30);
   displayModal('modal-fixed-popup');
 }
 
@@ -315,7 +331,7 @@ async function commitFixedForm(e) {
   fixedEvents.push(newEvent);
 
   dismissModal('modal-fixed-popup');
-  showSpringToast('Created locked event block!');
+  showSpringToast('Fixed event added.');
   syncStateToVisualDocks();
   if (isAutoSolve) {
     await triggerSchedulerOptimization(true);
@@ -326,7 +342,7 @@ async function commitFixedForm(e) {
 
 async function deleteFixedNode(index) {
   fixedEvents.splice(index, 1);
-  showSpringToast('Removed locked commitment.');
+  showSpringToast('Fixed event removed.');
   syncStateToVisualDocks();
   if (isAutoSolve) {
     await triggerSchedulerOptimization(true);
@@ -353,198 +369,6 @@ function launchImportModal(preselectedType) {
   lucide.createIcons();
 }
 
-/* ==========================================================================
-   4B. SETTINGS WIDGET HANDLERS
-   ========================================================================== */
-function launchSettingsModal() {
-  const toggle = document.getElementById('settings-auto-solve-toggle');
-  if (toggle) {
-    toggle.checked = isAutoSolve;
-  }
-  
-  const tourToggle = document.getElementById('settings-tour-autolaunch-toggle');
-  if (tourToggle) {
-    tourToggle.checked = localStorage.getItem('chrono_demo_tour_autolaunch') !== 'false';
-  }
-  
-  // Sync Performance controls
-  const presetSelect = document.getElementById('settings-perf-preset');
-  if (presetSelect) {
-    let savedPreset = 'max-beauty';
-    if (localStorage.getItem('chrono_max_opt') === 'true') {
-      savedPreset = 'max-opt';
-    } else if (localStorage.getItem('chrono_3d_quality') === 'medium') {
-      savedPreset = 'balanced';
-    }
-    presetSelect.value = savedPreset;
-  }
-
-  const maxOptToggle = document.getElementById('settings-max-opt-toggle');
-  if (maxOptToggle) {
-    maxOptToggle.checked = localStorage.getItem('chrono_max_opt') === 'true';
-  }
-
-  const buttonGlowToggle = document.getElementById('settings-button-glow-toggle');
-  if (buttonGlowToggle) {
-    buttonGlowToggle.checked = localStorage.getItem('chrono_button_glow') !== 'false';
-  }
-
-  const select3d = document.getElementById('settings-3d-quality');
-  if (select3d) {
-    select3d.value = localStorage.getItem('chrono_3d_quality') || 'high';
-  }
-  
-  // Sync the theme preset swatch active highlights
-  const activeThemeClass = Array.from(document.body.classList).find(c => c.startsWith('theme-')) || 'theme-violet';
-  document.querySelectorAll('#modal-settings-popup .theme-swatch').forEach(swatch => {
-    swatch.classList.toggle('active', swatch.classList.contains(`swatch-${activeThemeClass.replace('theme-', '')}`));
-  });
-  
-  displayModal('modal-settings-popup');
-  lucide.createIcons();
-}
-
-function toggleMaxOptimization(enabled) {
-  localStorage.setItem('chrono_max_opt', enabled ? 'true' : 'false');
-  
-  const body = document.body;
-  if (enabled) {
-    body.classList.add('max-optimized');
-    // Set 3D quality to disabled
-    const select3d = document.getElementById('settings-3d-quality');
-    if (select3d) {
-      select3d.value = 'disabled';
-      localStorage.setItem('chrono_3d_quality', 'disabled');
-      if (typeof rebuild3DScene === 'function') {
-        rebuild3DScene('disabled');
-      }
-    }
-    // Set button glow to disabled
-    const buttonGlowToggle = document.getElementById('settings-button-glow-toggle');
-    if (buttonGlowToggle) {
-      buttonGlowToggle.checked = false;
-      localStorage.setItem('chrono_button_glow', 'false');
-      body.classList.add('no-glows');
-    }
-    // Update preset selector
-    const presetSelect = document.getElementById('settings-perf-preset');
-    if (presetSelect) {
-      presetSelect.value = 'max-opt';
-    }
-    if (typeof showSpringToast === 'function') {
-      showSpringToast('Maximum Optimization Mode Active');
-    }
-  } else {
-    body.classList.remove('max-optimized');
-    // Revert to balanced
-    const presetSelect = document.getElementById('settings-perf-preset');
-    if (presetSelect) {
-      presetSelect.value = 'balanced';
-      applyPresetSettings('balanced');
-    }
-  }
-}
-
-function toggleButtonGlows(enabled) {
-  localStorage.setItem('chrono_button_glow', enabled ? 'true' : 'false');
-  const body = document.body;
-  if (enabled) {
-    body.classList.remove('no-glows');
-  } else {
-    body.classList.add('no-glows');
-  }
-  
-  // Uncheck max opt if button glows are re-enabled
-  if (enabled && localStorage.getItem('chrono_max_opt') === 'true') {
-    const maxOptToggle = document.getElementById('settings-max-opt-toggle');
-    if (maxOptToggle) maxOptToggle.checked = false;
-    localStorage.setItem('chrono_max_opt', 'false');
-    body.classList.remove('max-optimized');
-    const presetSelect = document.getElementById('settings-perf-preset');
-    if (presetSelect) presetSelect.value = 'balanced';
-  }
-}
-
-function applyPresetSettings(preset) {
-  const select3d = document.getElementById('settings-3d-quality');
-  const buttonGlowToggle = document.getElementById('settings-button-glow-toggle');
-  const maxOptToggle = document.getElementById('settings-max-opt-toggle');
-  const body = document.body;
-  
-  if (preset === 'max-beauty') {
-    if (select3d) select3d.value = 'high';
-    if (buttonGlowToggle) buttonGlowToggle.checked = true;
-    if (maxOptToggle) maxOptToggle.checked = false;
-    
-    localStorage.setItem('chrono_3d_quality', 'high');
-    localStorage.setItem('chrono_button_glow', 'true');
-    localStorage.setItem('chrono_max_opt', 'false');
-    
-    body.classList.remove('max-optimized', 'no-glows');
-    if (typeof rebuild3DScene === 'function') {
-      rebuild3DScene('high');
-    }
-    if (typeof showSpringToast === 'function') {
-      showSpringToast('Preset: Max Quality & Beauty');
-    }
-  } 
-  else if (preset === 'balanced') {
-    if (select3d) select3d.value = 'medium';
-    if (buttonGlowToggle) buttonGlowToggle.checked = true;
-    if (maxOptToggle) maxOptToggle.checked = false;
-    
-    localStorage.setItem('chrono_3d_quality', 'medium');
-    localStorage.setItem('chrono_button_glow', 'true');
-    localStorage.setItem('chrono_max_opt', 'false');
-    
-    body.classList.remove('max-optimized', 'no-glows');
-    if (typeof rebuild3DScene === 'function') {
-      rebuild3DScene('medium');
-    }
-    if (typeof showSpringToast === 'function') {
-      showSpringToast('Preset: Balanced Performance');
-    }
-  } 
-  else if (preset === 'max-opt') {
-    if (select3d) select3d.value = 'disabled';
-    if (buttonGlowToggle) buttonGlowToggle.checked = false;
-    if (maxOptToggle) maxOptToggle.checked = true;
-    
-    localStorage.setItem('chrono_3d_quality', 'disabled');
-    localStorage.setItem('chrono_button_glow', 'false');
-    localStorage.setItem('chrono_max_opt', 'true');
-    
-    body.classList.add('max-optimized', 'no-glows');
-    if (typeof rebuild3DScene === 'function') {
-      rebuild3DScene('disabled');
-    }
-    if (typeof showSpringToast === 'function') {
-      showSpringToast('Preset: Max Optimization Mode');
-    }
-  }
-}
-
-function syncSettingsAutoSolve(checked) {
-  toggleAutoSolveState(checked);
-}
-
-function toggleTourAutolaunch(checked) {
-  localStorage.setItem('chrono_demo_tour_autolaunch', checked ? 'true' : 'false');
-  if (typeof showSpringToast === 'function') {
-    showSpringToast(checked ? 'Guide Auto-Launch Enabled' : 'Guide Auto-Launch Disabled');
-  }
-}
-
-function triggerGlobalImportFromSettings() {
-  dismissModal('modal-settings-popup');
-  launchImportModal('package');
-}
-
-function triggerGlobalExportFromSettings() {
-  dismissModal('modal-settings-popup');
-  downloadRawDatabasePackage();
-}
-
 function beautifyImportJson() {
   try {
     const txtArea = document.getElementById('import-textarea-json');
@@ -557,6 +381,36 @@ function beautifyImportJson() {
   } catch (err) {
     showSpringToast('Formatting Failed: Invalid JSON syntax. ' + err.message, 'error');
   }
+}
+
+function launchSettingsModal() {
+  const toggle = document.getElementById('settings-auto-solve-toggle');
+  if (toggle) {
+    toggle.checked = isAutoSolve;
+  }
+  
+  // Sync the theme preset swatch active highlights
+  const activeThemeClass = Array.from(document.body.classList).find(c => c.startsWith('theme-')) || 'theme-dark';
+  document.querySelectorAll('#modal-settings-popup .theme-swatch').forEach(swatch => {
+    swatch.classList.toggle('active', swatch.classList.contains(`swatch-${activeThemeClass.replace('theme-', '')}`));
+  });
+  
+  displayModal('modal-settings-popup');
+  lucide.createIcons();
+}
+
+function syncSettingsAutoSolve(checked) {
+  toggleAutoSolveState(checked);
+}
+
+function triggerGlobalImportFromSettings() {
+  dismissModal('modal-settings-popup');
+  launchImportModal('package');
+}
+
+function triggerGlobalExportFromSettings() {
+  dismissModal('modal-settings-popup');
+  downloadRawDatabasePackage();
 }
 
 function handleImportFileSelect(e) {
@@ -734,7 +588,7 @@ async function commitImportForm(e) {
   }
 }
 
-// Load a premium demonstration task package preset template into the Import editor (PHASE 16)
+// Load a demonstration planner package preset into the Import editor.
 function loadImportTemplatePreset(presetType) {
   const txtArea = document.getElementById('import-textarea-json');
   if (!txtArea) return;
@@ -884,7 +738,7 @@ function loadImportTemplatePreset(presetType) {
         },
         {
           "id": 4,
-          "name": "Figma SaaS Design mockups",
+          "name": "Design portfolio mockups",
           "duration_minutes": 150,
           "deadline": "2026-06-07T18:00:00",
           "priority": 4,
@@ -997,7 +851,7 @@ function launchFixProblemModal(taskId, reason) {
 
     const div = document.createElement('div');
     div.innerHTML = `
-      <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#fff; cursor:pointer;">
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary); cursor:pointer;">
         <input type="checkbox" name="fix-day-checkbox" value="${dateStr}" ${checkedAttr} />
         <span>${labelText}</span>
       </label>

@@ -141,7 +141,6 @@ Task-Scheduler/
     │       ├── calendar_views.js  #  Week & agenda calendar
     │       ├── charts.js      #     Chart.js analytics
     │       ├── exports.js     #     Download & compiler log
-    │       ├── canvas.js      #     Particle background
     │       └── tour.js        #     Interactive guided tour
     └── templates/
         └── index.html         #   Main SPA template
