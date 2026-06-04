@@ -336,6 +336,11 @@ function setTourCameraStep(stepIndex) {
 // Render Loop
 let moonAngle = 0;
 let is3dBackdropEnabled = localStorage.getItem('chrono_disable_3d') !== 'true';
+let isTabVisible = true;
+
+document.addEventListener('visibilitychange', () => {
+  isTabVisible = !document.hidden;
+});
 
 function toggle3DBackground(disabled) {
   is3dBackdropEnabled = !disabled;
@@ -353,7 +358,7 @@ function toggle3DBackground(disabled) {
 
 function animate() {
   requestAnimationFrame(animate);
-  if (!is3dBackdropEnabled) return;
+  if (!is3dBackdropEnabled || !isTabVisible) return;
   
   // Update camera positions based on cinematic mode
   if (cinematicMode) {
