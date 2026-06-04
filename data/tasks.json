@@ -79,5 +79,222 @@
     "name": "Code Review & Push",
     "priority": 3,
     "subtasks": []
+  },
+  {
+    "can_split": true,
+    "deadline": "2026-06-15T23:59:00",
+    "dependencies": [],
+    "difficulty": 5,
+    "duration_minutes": 300,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 6,
+    "name": "Implement Merge Sort Lab",
+    "priority": 5,
+    "subtasks": [
+      {
+        "completed": true,
+        "name": "Write recursive split function"
+      },
+      {
+        "completed": false,
+        "name": "Write merge function"
+      },
+      {
+        "completed": false,
+        "name": "Test with edge cases"
+      }
+    ]
+  },
+  {
+    "can_split": true,
+    "deadline": "2026-06-16T20:00:00",
+    "dependencies": [
+      6
+    ],
+    "difficulty": 4,
+    "duration_minutes": 180,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 7,
+    "name": "DSA Lab Report",
+    "priority": 4,
+    "subtasks": [
+      {
+        "completed": false,
+        "name": "Write complexity analysis"
+      },
+      {
+        "completed": false,
+        "name": "Add benchmark results table"
+      }
+    ]
+  },
+  {
+    "can_split": false,
+    "deadline": "2026-06-13T23:00:00",
+    "dependencies": [],
+    "difficulty": 3,
+    "duration_minutes": 150,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 8,
+    "name": "Godot Player Controller",
+    "priority": 3,
+    "subtasks": [
+      {
+        "completed": true,
+        "name": "Set up CharacterBody2D"
+      },
+      {
+        "completed": false,
+        "name": "Implement jump & gravity"
+      },
+      {
+        "completed": false,
+        "name": "Add coyote time logic"
+      }
+    ]
+  },
+  {
+    "can_split": true,
+    "deadline": "2026-06-17T18:00:00",
+    "dependencies": [
+      8
+    ],
+    "difficulty": 3,
+    "duration_minutes": 120,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 9,
+    "name": "Godot Enemy AI",
+    "priority": 3,
+    "subtasks": [
+      {
+        "completed": false,
+        "name": "Patrol state logic"
+      },
+      {
+        "completed": false,
+        "name": "Chase player trigger"
+      }
+    ]
+  },
+  {
+    "can_split": false,
+    "deadline": "2026-06-12T12:00:00",
+    "dependencies": [],
+    "difficulty": 2,
+    "duration_minutes": 45,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 10,
+    "name": "Complex Analysis Problem Set",
+    "priority": 4,
+    "subtasks": []
+  },
+  {
+    "can_split": true,
+    "deadline": "2026-06-18T20:00:00",
+    "dependencies": [],
+    "difficulty": 4,
+    "duration_minutes": 200,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 11,
+    "name": "Binary Tree Implementation in C",
+    "priority": 4,
+    "subtasks": [
+      {
+        "completed": false,
+        "name": "Insert node function"
+      },
+      {
+        "completed": false,
+        "name": "In-order traversal"
+      },
+      {
+        "completed": false,
+        "name": "Delete node with rebalancing"
+      }
+    ]
+  },
+  {
+    "can_split": false,
+    "deadline": "2026-06-14T14:00:00",
+    "dependencies": [
+      11
+    ],
+    "difficulty": 3,
+    "duration_minutes": 90,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 12,
+    "name": "Unit Tests for Binary Tree",
+    "priority": 3,
+    "subtasks": []
+  },
+  {
+    "can_split": true,
+    "deadline": "2026-06-20T18:00:00",
+    "dependencies": [],
+    "difficulty": 2,
+    "duration_minutes": 60,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 13,
+    "name": "Git Repository Cleanup",
+    "priority": 2,
+    "subtasks": [
+      {
+        "completed": false,
+        "name": "Remove stale branches"
+      },
+      {
+        "completed": false,
+        "name": "Update README files"
+      }
+    ]
+  },
+  {
+    "can_split": true,
+    "deadline": "2026-06-19T23:59:00",
+    "dependencies": [
+      4
+    ],
+    "difficulty": 5,
+    "duration_minutes": 360,
+    "fixed": false,
+    "fixed_end": null,
+    "fixed_start": null,
+    "id": 15,
+    "name": "Full Stack Mini Project",
+    "priority": 5,
+    "subtasks": [
+      {
+        "completed": false,
+        "name": "Design database schema"
+      },
+      {
+        "completed": false,
+        "name": "Implement REST endpoints"
+      },
+      {
+        "completed": false,
+        "name": "Connect frontend to backend"
+      },
+      {
+        "completed": false,
+        "name": "Deploy and test"
+      }
+    ]
   }
 ]

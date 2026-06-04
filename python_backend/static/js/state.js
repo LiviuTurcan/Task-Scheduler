@@ -899,10 +899,15 @@ function syncStateToVisualDocks() {
         return tObj ? tObj.name : '#' + id;
       }).join(', ');
 
-      let priorityStars = '';
-      for (let s = 1; s <= 5; s++) {
-        priorityStars += s <= task.priority ? '*' : '-';
-      }
+      // Render priority as a HUD similar to difficulty (text + track)
+      const priorityHud = `
+        <span class="badge-hud">
+          <div class="hud-difficulty-wrapper">
+            <span>Priority:</span>
+            <span style="font-weight:700; margin-left:6px;">${task.priority}</span>
+          </div>
+        </span>
+      `;
 
       // Compute checklist progress if subtasks checklists exist
       let checklistHtml = '';
@@ -942,7 +947,7 @@ function syncStateToVisualDocks() {
         </div>
         <div class="card-badge-row">
           <span class="badge-hud p-purple">${formatMinutesLabel(task.duration_minutes)}</span>
-          <span class="badge-hud" style="color:#fbbf24; border-color:rgba(251,191,36,0.15);">${priorityStars}</span>
+          ${priorityHud}
           <span class="badge-hud">
             <div class="hud-difficulty-wrapper">
               <span>Diff:</span>
@@ -1097,10 +1102,15 @@ function syncStateToVisualDocks() {
         card.style.borderLeft = '4px solid var(--neon-rose)';
         card.style.background = 'rgba(244, 63, 94, 0.03)';
         
-        let priorityStars = '';
-        for (let s = 1; s <= 5; s++) {
-          priorityStars += s <= task.priority ? '*' : '-';
-        }
+        // Render priority as a HUD similar to difficulty (text + track)
+        const priorityHud = `
+          <span class="badge-hud">
+            <div class="hud-difficulty-wrapper">
+              <span>Priority:</span>
+              <span style="font-weight:700; margin-left:6px;">${task.priority}</span>
+            </div>
+          </span>
+        `;
 
         card.innerHTML = `
           <div class="card-item-top">
@@ -1111,7 +1121,7 @@ function syncStateToVisualDocks() {
           </div>
           <div class="card-badge-row">
             <span class="badge-hud p-rose">${formatMinutesLabel(task.duration_minutes)}</span>
-            <span class="badge-hud" style="color:#fbbf24; border-color:rgba(251,191,36,0.15);">${priorityStars}</span>
+            ${priorityHud}
             <span class="badge-hud p-rose">Ended</span>
           </div>
           <div style="font-size:10px; color:var(--text-muted); display:flex; flex-direction:column; gap:2px; margin-top:6px;">
