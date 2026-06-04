@@ -367,6 +367,11 @@ function launchSettingsModal() {
     tourToggle.checked = localStorage.getItem('chrono_demo_tour_autolaunch') !== 'false';
   }
   
+  const disable3dToggle = document.getElementById('settings-disable-3d-toggle');
+  if (disable3dToggle) {
+    disable3dToggle.checked = localStorage.getItem('chrono_disable_3d') === 'true';
+  }
+  
   // Sync the theme preset swatch active highlights
   const activeThemeClass = Array.from(document.body.classList).find(c => c.startsWith('theme-')) || 'theme-violet';
   document.querySelectorAll('#modal-settings-popup .theme-swatch').forEach(swatch => {

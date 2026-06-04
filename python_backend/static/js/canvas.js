@@ -239,6 +239,7 @@ function init3DBackdrop() {
   
   // Position planet based on screen size
   updatePlanetLayout();
+  syncThreeColors();
 }
 
 // Position planet in the desktop sidebar area
@@ -334,8 +335,25 @@ function setTourCameraStep(stepIndex) {
 
 // Render Loop
 let moonAngle = 0;
+let is3dBackdropEnabled = localStorage.getItem('chrono_disable_3d') !== 'true';
+
+function toggle3DBackground(disabled) {
+  is3dBackdropEnabled = !disabled;
+  localStorage.setItem('chrono_disable_3d', disabled ? 'true' : 'false');
+  
+  const canvasEl = document.getElementById('particles-canvas');
+  if (canvasEl) {
+    canvasEl.style.display = disabled ? 'none' : 'block';
+  }
+  
+  if (is3dBackdropEnabled) {
+    window.dispatchEvent(new Event('resize'));
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
+  if (!is3dBackdropEnabled) return;
   
   // Update camera positions based on cinematic mode
   if (cinematicMode) {
@@ -392,9 +410,6 @@ function animate() {
     starParticles.rotation.x += 0.0001;
   }
   
-  // Sync colors from active theme
-  syncThreeColors();
-  
   renderer.render(scene, camera);
 }
 
@@ -411,5 +426,20 @@ window.addEventListener('resize', () => {
 // Bootstrapper initialization
 window.addEventListener('DOMContentLoaded', () => {
   init3DBackdrop();
+  
+  // Initialize state of toggle checkbox
+  const disable3dToggle = document.getElementById('settings-disable-3d-toggle');
+  if (disable3dToggle) {
+    disable3dToggle.checked = localStorage.getItem('chrono_disable_3d') === 'true';
+  }
+  
+  if (localStorage.getItem('chrono_disable_3d') === 'true') {
+    is3dBackdropEnabled = false;
+    const canvasEl = document.getElementById('particles-canvas');
+    if (canvasEl) {
+      canvasEl.style.display = 'none';
+    }
+  }
+  
   animate();
 });

@@ -714,6 +714,25 @@
           </p>
         </div>
 
+        <!-- Disable 3D Background Toggle -->
+        <div class="hud-field-group">
+          <label style="margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--text-secondary);">
+            Performance Configuration
+          </label>
+          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; height: 42px;">
+            <span style="font-size: 13px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="eye-off" style="width: 16px; height: 16px; color: var(--neon-cyan);"></i> Disable 3D Space Backdrop
+            </span>
+            <label class="hud-toggle size-sm">
+              <input type="checkbox" id="settings-disable-3d-toggle" onchange="toggle3DBackground(this.checked)">
+              <span class="hud-toggle-slider"></span>
+            </label>
+          </div>
+          <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4;">
+            Turn off the WebGL 3D space background to maximize performance on lower-end devices.
+          </p>
+        </div>
+
         <!-- Global Package Import/Export -->
         <div class="hud-field-group">
           <label style="margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--text-secondary);">
@@ -882,6 +901,11 @@
       // Trigger color updates in Chart.js if initialized
       if (typeof updateChartsThemeColors === 'function') {
         updateChartsThemeColors();
+      }
+      
+      // Trigger color updates in Three.js backdrop if initialized
+      if (typeof syncThreeColors === 'function') {
+        syncThreeColors();
       }
       
       if (typeof showSpringToast === 'function') {
