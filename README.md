@@ -300,11 +300,8 @@ Developed by the FAF-252 team at the Technical University of Moldova.
 * Liviu Turcan
 * Dmitrii Bejan
 * Pavel Ciobanu
-* Veaceslav Colțuc
+* Veaceslav Coltuc
 * Ludmila Goțonoaga
 
 ---
 
-# License
-
-This project was developed for educational and research purposes.
